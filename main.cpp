@@ -1,4 +1,5 @@
 #include <main.hpp>
+#include <boost/any.hpp>
 thread_control threadcontrol;
 boost::asio::io_service ioserv;
 #define MEM_FN(x) boost::bind(&client::x, shared_from_this())
@@ -6,9 +7,12 @@ boost::asio::io_service ioserv;
 #define MEM_FN2(x,y,z) boost::bind(&client::x, shared_from_this(),y,z)
 asio::ip::tcp::endpoint ep( asio::ip::address::from_string("127.0.0.1"), 8001);
 asio::ip::tcp::acceptor acceptor(ioserv, ep);
-client::client() : sock_(ioserv), started_(false)
+client::client() : sock_(ioserv), started_(false),isreal(true)
 {
-
+    read_buffer_ = new char[max_msg];
+    write_buffer_ = new char[max_msg];
+    read_buffer_size = max_msg;
+    write_buffer_size = max_msg;
 }
 void client::stop()
 {
@@ -28,7 +32,7 @@ void client::start()
 }
 void client::do_read()
 {
-    async_read(sock_, asio::buffer(read_buffer_),
+    async_read(sock_, asio::buffer(read_buffer_,read_buffer_size),
                MEM_FN2(read_complete,_1,_2), MEM_FN2(on_read,_1,_2));
 }
 void client::do_write(const std::string & msg)
@@ -37,6 +41,12 @@ void client::do_write(const std::string & msg)
     std::copy(msg.begin(), msg.end(), write_buffer_);
     sock_.async_write_some( asio::buffer(write_buffer_, msg.size()),
                             MEM_FN2(on_write,_1,_2));
+}
+void client::sync_write(const std::string & msg)
+{
+    if ( !started() ) return;
+    std::copy(msg.begin(), msg.end(), write_buffer_);
+    sock_.write_some( asio::buffer(write_buffer_, msg.size()));
 }
 size_t client::read_complete(const boost::system::error_code & err, size_t bytes)
 {
@@ -50,8 +60,16 @@ void client::on_read(const boost::system::error_code & err, size_t bytes)
     if ( !err)
     {
         std::string msg(read_buffer_, bytes);
-        do_write(msg + "\n");
-        do_read();
+        MyCommand cmd;
+        cmd.clientptr=shared_from_this();
+        cmd.cmd=msg;
+        threadcontrol.autoCommand(cmd);
+        //do_read();
+    }
+    else
+    {
+        if(err!=asio::error::eof)
+            cerr << err.message() << endl;
     }
 }
 void thread_control::newThread()
@@ -67,7 +85,7 @@ void thread_control::addThread(mythread* thend)
 }
 void thread_control::autoCommand(MyCommand cmd)
 {
-    int maxmessages=0;
+    unsigned int maxmessages=0;
     auto i = threads.begin(), thisthread = threads.begin();
     maxmessages=(*thisthread)->commandsarray.size();
     for(++i;i!=threads.end();++i)
@@ -85,9 +103,20 @@ void thread_control::autoCommand(MyCommand cmd)
 
 void client::on_write(const boost::system::error_code & err, size_t bytes)
 {
-    if(!err)
-        do_read();
 }
+bool client::isReal()
+{
+    return isreal;
+}
+
+client::~client()
+{
+    cout << "Дестркутор!" << endl;
+    cout << flush;
+    delete[] read_buffer_;
+    delete[] write_buffer_;
+}
+
 bool client::started() {return started_;}
 asio::ip::tcp::socket & client::sock() { return sock_;}
 bool mythread::isStart() const
@@ -109,22 +138,46 @@ void mythread::run(mythread* me)
     while(me->commandsarray.size()>0)
     {
         MyCommand thiscmd=me->commandsarray.front();
-        if(thiscmd.cmd=="test")
-            cout << "test!" << endl;
+        ComandUse(me,&thiscmd);
         me->commandsarray.pop();
+        if(thiscmd.clientptr->started())
+            thiscmd.clientptr->do_read();
     }
 }
+void ComandUse(mythread* me,MyCommand* thiscmd)
+{
+    if(thiscmd->cmd=="stop\r\n")
+    {
+        thiscmd->clientptr->sync_write("test!");
+        thiscmd->clientptr->stop();
+    }
+    else if(thiscmd->cmd=="test\r\n")
+    {
+        thiscmd->clientptr->do_write("test!");
+    }
+
+}
+
 mythread::~mythread()
 {
     if(_isStart)
         delete threadptr;
 }
-
+void localcmd_thread()
+{
+    std::string cmd;
+    cin >> cmd;
+    if(cmd=="info")
+    {
+        cout << "info OK";
+    }
+    cout << flush;
+}
 void handle_accept(client::ptr client, const boost::system::error_code & err)
 {
     if(err)
     {
-        cout << err.message() << endl;
+        cerr << err.message() << endl;
         return;
     }
     client->start();
@@ -134,12 +187,11 @@ void handle_accept(client::ptr client, const boost::system::error_code & err)
 }
 int main(int argc, char *argv[])
 {
-
     threadcontrol.newThread();
-    MyCommand test;
-    test.cmd="test";
-    threadcontrol.autoCommand(test);
+    threadcontrol.newThread();
     cout << "Hello World!" << endl;
+    std::thread localcmdthread(localcmd_thread);
+    localcmdthread.detach();
     client::ptr cliente = client::new_();
     acceptor.async_accept(cliente->sock(), boost::bind(handle_accept,cliente,_1));
     ioserv.run();

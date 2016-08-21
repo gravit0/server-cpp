@@ -6,34 +6,52 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/variant.hpp>
 #include <list>
 #include <queue>
+#include <functional>
 #include <thread>
 using namespace std;
 namespace fs = boost::filesystem;
 namespace asio = boost::asio;
-class client : public boost::enable_shared_from_this<client>, boost::noncopyable
+class basic_client
+{
+public:
+    basic_client() {}
+    virtual void start() = 0;
+    virtual void stop() = 0;
+    virtual void do_write(const std::string & msg) = 0;
+    virtual void sync_write(const std::string & msg) = 0;
+    virtual bool started() = 0;
+    virtual ~basic_client() {}
+};
+
+class client : public boost::enable_shared_from_this<client>, boost::noncopyable,basic_client
 {
     asio::ip::tcp::socket sock_;
     enum { max_msg = 1024 };
-    char read_buffer_[max_msg];
-    char write_buffer_[max_msg];
-    bool started_;
-
+    char* read_buffer_;
+    char* write_buffer_;
+    bool started_,isreal;
+    int read_buffer_size,write_buffer_size;
     client();
 public:
+    virtual ~client();
     typedef boost::shared_ptr<client> ptr;
     void stop();
     static ptr new_();
     void start();
     void do_read();
     void do_write(const std::string & msg);
+    void sync_write(const std::string & msg);
     size_t read_complete(const boost::system::error_code & err, size_t bytes);
     void on_read(const boost::system::error_code & err, size_t bytes);
     void on_write(const boost::system::error_code & err, size_t bytes);
     bool started();
+    bool isReal();
     asio::ip::tcp::socket & sock();
 };
+
 struct MyCommand
 {
     std::string cmd;
@@ -50,6 +68,7 @@ public:
     ~mythread();
     bool isStart() const;
 };
+void ComandUse(mythread* me, MyCommand *thiscmd);
 class thread_control
 {
     list<mythread*> threads;
