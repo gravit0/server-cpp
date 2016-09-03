@@ -14,6 +14,8 @@ client::client() : sock_(ioserv), started_(false),isreal(true)
     write_buffer_ = new char[max_msg];
     read_buffer_size = max_msg;
     write_buffer_size = max_msg;
+    permissionsLevel=0;
+    isAuth=false;
 }
 void client::stop()
 {

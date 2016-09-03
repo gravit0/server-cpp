@@ -53,6 +53,10 @@ public:
     bool started();
     bool isReal();
     asio::ip::tcp::socket & sock();
+    //Расширенные опции
+    unsigned int permissionsLevel; //Уровень привилегий пользователя
+    bool isAuth; //Авторизирован ли он
+
 };
 
 struct MyCommand
