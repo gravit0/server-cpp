@@ -1,6 +1,6 @@
 #include <main.hpp>
 #include <boost/any.hpp>
-
+#include "abstractcommand.h"
 void localcmd_thread()
 {
     std::string cmd;
@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     std::thread localcmdthread(localcmd_thread);
     localcmdthread.detach();
     boostserver::client::ptr cliente = boostserver::client::new_();
-    //acceptor.async_accept(cliente->sock(), boost::bind(handle_accept,cliente,_1));
-    //ioserv.run();
+    boostserver::acceptor.async_accept(cliente->sock(), boost::bind(boostserver::handle_accept,cliente,_1));
+    boostserver::ioserv.run();
     return 0;
 }

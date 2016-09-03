@@ -12,10 +12,11 @@
 #include <functional>
 #include <thread>
 using namespace std;
-namespace fs = boost::filesystem;
-namespace asio = boost::asio;
+
 namespace boostserver
 {
+namespace fs = boost::filesystem;
+namespace asio = boost::asio;
 class basic_client
 {
 public:
@@ -81,5 +82,9 @@ public:
     void autoCommand(MyCommand cmd);
 };
 extern thread_control threadcontrol;
+extern asio::ip::tcp::acceptor acceptor;
+extern asio::ip::tcp::endpoint ep;
+extern boost::asio::io_service ioserv;
+void handle_accept(client::ptr client, const boost::system::error_code & err);
 }
 #endif // BOOSTSERVER_HPP

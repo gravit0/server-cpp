@@ -8,4 +8,5 @@ SOURCES += main.cpp \
 
 HEADERS += \
     main.hpp \
-    boost-server.hpp
+    boost-server.hpp \
+    abstractcommand.h
