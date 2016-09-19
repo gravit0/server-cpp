@@ -3,12 +3,14 @@
 #include <string>
 #include <list>
 #include <boost-server.hpp>
-class AbstractCommand{
+#include <functional>
+class Command{
 public:
-    virtual void init() = 0;
-    virtual void exec(std::list<std::string>* args,boostserver::client::ptr client) = 0;
-    virtual std::string getName() = 0;
+    virtual void operator ()(std::list<std::string>* args,boostserver::client::ptr client) = 0;
+    std::string name;
     unsigned int minPermissions = 0;
+    virtual ~Command() {}
 };
-
+bool initBaseCmds();
+extern list<Command*> _cmds;
 #endif // ABSTRACTCOMMAND_H

@@ -79,9 +79,10 @@ void ComandUse(mythread* me, MyCommand *thiscmd);
 class thread_control
 {
     list<mythread*> threads;
-    unsigned long long int addThreads=0,newThreads=0;
+    unsigned long long int addThreads=0,newThreadsd=0;
 public:
     void newThread();
+    void newThreads(unsigned int threadsd);
     void addThread(mythread* thend);
     void autoCommand(MyCommand cmd);
 };

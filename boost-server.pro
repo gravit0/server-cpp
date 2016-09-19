@@ -6,7 +6,8 @@ LIBS += -lboost_system -lboost_filesystem -lpthread -lmysqlclient
 SOURCES += main.cpp \
     boost-server.cpp \
     utils.cpp \
-    databasehelper.cpp
+    databasehelper.cpp \
+    basecmds.cpp
 
 HEADERS += \
     main.hpp \

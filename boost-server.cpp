@@ -1,4 +1,5 @@
 #include <boost-server.hpp>
+#include <abstractcommand.h>
 namespace boostserver
 {
 thread_control threadcontrol;
@@ -79,7 +80,16 @@ void thread_control::newThread()
 {
     mythread* then = new mythread();
     threads.push_back(then);
-    newThreads++;
+    newThreadsd++;
+}
+void thread_control::newThreads(unsigned int threadsd)
+{
+    for(int  i=0;i<threadsd;++i)
+    {
+        mythread* then = new mythread();
+        threads.push_back(then);
+    }
+    newThreadsd+=threadsd;
 }
 void thread_control::addThread(mythread* thend)
 {
@@ -149,16 +159,18 @@ void mythread::run(mythread* me)
 }
 void ComandUse(mythread* me,MyCommand* thiscmd)
 {
-    if(thiscmd->cmd=="stop\r\n")
+    for(auto i = _cmds.begin();i!=_cmds.end();++i)
     {
-        thiscmd->clientptr->sync_write("test!");
-        thiscmd->clientptr->stop();
+        if((*i)->name==thiscmd->cmd)
+        {
+            if(thiscmd->clientptr->permissionsLevel>=(*i)->minPermissions)
+                (*i)->operator ()({},thiscmd->clientptr);
+            else
+                thiscmd->clientptr->do_write("Not Permissions\n");
+            break;
+        }
     }
-    else if(thiscmd->cmd=="test\r\n")
-    {
-        thiscmd->clientptr->do_write("test!");
-    }
-
+    thiscmd->clientptr->do_write("Command not found\n");
 }
 
 mythread::~mythread()
