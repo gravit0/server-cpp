@@ -8,7 +8,7 @@ boost::asio::io_service ioserv;
 #define MEM_FN1(x,y) boost::bind(&client::x, shared_from_this(),y)
 #define MEM_FN2(x,y,z) boost::bind(&client::x, shared_from_this(),y,z)
 asio::ip::tcp::endpoint ep( asio::ip::address::from_string("127.0.0.1"), 8001);
-asio::ip::tcp::acceptor acceptor(ioserv, ep);
+asio::ip::tcp::acceptor* acceptor;
 client::client() : sock_(ioserv), started_(false),isreal(true)
 {
     read_buffer_ = new char[max_msg];
@@ -167,7 +167,7 @@ void ComandUse(mythread* me,MyCommand* thiscmd)
                 (*i)->operator ()({},thiscmd->clientptr);
             else
                 thiscmd->clientptr->do_write("Not Permissions\n");
-            break;
+            return;
         }
     }
     thiscmd->clientptr->do_write("Command not found\n");
@@ -189,6 +189,6 @@ void handle_accept(client::ptr client, const boost::system::error_code & err)
     client->start();
     cout << "New Client!" << endl;
     client::ptr new_client = client::new_();
-    acceptor.async_accept(new_client->sock(), boost::bind(handle_accept,new_client,_1));
+    acceptor->async_accept(new_client->sock(), boost::bind(handle_accept,new_client,_1));
 }
 }
