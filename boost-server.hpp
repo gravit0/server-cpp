@@ -11,8 +11,10 @@
 #include <queue>
 #include <functional>
 #include <thread>
+#include "database.h"
 using namespace std;
-
+extern std::string  config_mysql_login,config_mysql_password,config_mysql_dbname,config_mysql_host;
+extern int config_mysql_port;
 namespace boostserver
 {
 namespace fs = boost::filesystem;
@@ -37,6 +39,7 @@ class client : public boost::enable_shared_from_this<client>, boost::noncopyable
     char* write_buffer_;
     bool started_,isreal;
     int read_buffer_size,write_buffer_size;
+
     client();
 public:
     virtual ~client();
@@ -56,7 +59,7 @@ public:
     //Расширенные опции
     unsigned int permissionsLevel; //Уровень привилегий пользователя
     bool isAuth; //Авторизирован ли он
-
+    std::string login,nickname,email,groups;
 };
 
 struct MyCommand
@@ -72,6 +75,7 @@ public:
     std::queue<MyCommand> commandsarray;
     void launch(bool isJoin);
     static void run(mythread *me);
+    Database db;
     ~mythread();
     bool isStart() const;
 };

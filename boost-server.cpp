@@ -79,6 +79,7 @@ void client::on_read(const boost::system::error_code & err, size_t bytes)
 void thread_control::newThread()
 {
     mythread* then = new mythread();
+    then->db.connect(config_mysql_host,config_mysql_port,config_mysql_login,config_mysql_password,config_mysql_dbname);
     threads.push_back(then);
     newThreadsd++;
 }
@@ -87,6 +88,7 @@ void thread_control::newThreads(unsigned int threadsd)
     for(int  i=0;i<threadsd;++i)
     {
         mythread* then = new mythread();
+        then->db.connect(config_mysql_host,config_mysql_port,config_mysql_login,config_mysql_password,config_mysql_dbname);
         threads.push_back(then);
     }
     newThreadsd+=threadsd;
@@ -166,7 +168,7 @@ void ComandUse(mythread* me,MyCommand* thiscmd)
         if((*i)->name==cmdname)
         {
             if(thiscmd->clientptr->permissionsLevel>=(*i)->minPermissions)
-                (*i)->func((*i),arr,thiscmd->clientptr);
+                (*i)->func(me,(*i),arr,thiscmd->clientptr);
             else
                 thiscmd->clientptr->do_write("Not Permissions\n");
             return;

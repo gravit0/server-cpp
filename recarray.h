@@ -1,7 +1,7 @@
 #ifndef RECARRAY_H
 #define RECARRAY_H
 #include <boost/property_tree/ptree.hpp>
-#include <strstream>
+
 typedef boost::property_tree::ptree RecursionArray;
 namespace RecArrUtils
 {

@@ -7,6 +7,8 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/foreach.hpp>
 #include <recarray.h>
+std::string  config_mysql_login,config_mysql_password,config_mysql_dbname,config_mysql_host;
+int config_mysql_port;
 void localcmd_thread()
 {
     std::string cmd;
@@ -25,6 +27,10 @@ int main(int argc, char *argv[])
         cout << "OK" << endl;
     else
         cout << "Fail" << endl;
+    config_mysql_login="localhost";
+    config_mysql_dbname="chat";
+    config_mysql_password="FJS8CFhuumsERQbp!";
+    config_mysql_port=3306;
     cout << "Start threads ";
     boostserver::threadcontrol.newThreads(2);
     cout << "OK" << endl;

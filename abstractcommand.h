@@ -7,7 +7,7 @@
 #include "recarray.h"
 class Command{
 public:
-    std::function<void(Command* cmd,const RecursionArray& args,boostserver::client::ptr client)> func;
+    std::function<void(boostserver::mythread* me,Command* cmd,const RecursionArray& args,boostserver::client::ptr client)> func;
     std::string name;
     unsigned int minPermissions = 0;
     ~Command() {}

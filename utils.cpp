@@ -2,8 +2,14 @@
 #include "recarray.h"
 #include <boost/foreach.hpp>
 #include <iostream>
+#include <strstream>
+#include "database.h"
 namespace AccountUtils
 {
+void auth(boostserver::client::ptr client, std::string login,std::string password,Database* db)
+{
+
+}
 }
 namespace RecArrUtils
 {
@@ -33,7 +39,7 @@ std::string printTreeEx(const RecursionArray& tree)
         else
         {
             steam << "Map " << v.first << std::endl;
-            printTree(tmp);
+            printTreeEx(tmp);
             steam << "End" << std::endl;
         }
     }

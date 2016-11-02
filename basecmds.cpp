@@ -4,13 +4,13 @@ bool initBaseCmds()
 {
     Command* cmdtest=new Command();
     cmdtest->name="test";
-    cmdtest->func=[](Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
+    cmdtest->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         client->do_write("Test\n");
     };
     Command* cmdsu=new Command();
     cmdsu->name="su";
-    cmdsu->func=[](Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
+    cmdsu->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         if(client->sock().remote_endpoint().address()==boostserver::ep.address())
         {
@@ -20,7 +20,7 @@ bool initBaseCmds()
     };
     Command* cmdecho=new Command();
     cmdsu->name="echo";
-    cmdsu->func=[](Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
+    cmdsu->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         client->do_write(RecArrUtils::printTreeEx(args));
     };
