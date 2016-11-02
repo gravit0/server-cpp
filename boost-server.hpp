@@ -85,6 +85,7 @@ public:
     void newThreads(unsigned int threadsd);
     void addThread(mythread* thend);
     void autoCommand(MyCommand cmd);
+    ~thread_control();
 };
 extern thread_control threadcontrol;
 extern asio::ip::tcp::acceptor* acceptor;

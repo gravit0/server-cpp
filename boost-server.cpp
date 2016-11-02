@@ -159,18 +159,23 @@ void mythread::run(mythread* me)
 }
 void ComandUse(mythread* me,MyCommand* thiscmd)
 {
+    RecursionArray arr=RecArrUtils::fromArcan(thiscmd->cmd);
+    std::string cmdname=RecArrUtils::getString(arr,"type");
     for(auto i = _cmds.begin();i!=_cmds.end();++i)
     {
-        if((*i)->name==thiscmd->cmd)
+        if((*i)->name==cmdname)
         {
             if(thiscmd->clientptr->permissionsLevel>=(*i)->minPermissions)
-                (*i)->operator ()({},thiscmd->clientptr);
+                (*i)->func((*i),arr,thiscmd->clientptr);
             else
                 thiscmd->clientptr->do_write("Not Permissions\n");
             return;
         }
     }
     thiscmd->clientptr->do_write("Command not found\n");
+}
+thread_control::~thread_control()
+{
 }
 
 mythread::~mythread()

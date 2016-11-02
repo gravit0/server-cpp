@@ -1,6 +1,12 @@
 #include <main.hpp>
 #include <boost/any.hpp>
 #include "abstractcommand.h"
+#include "database.h"
+//#include "recursionarray.h"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
+#include <boost/foreach.hpp>
+#include <recarray.h>
 void localcmd_thread()
 {
     std::string cmd;
@@ -11,6 +17,7 @@ void localcmd_thread()
     }
     cout << flush;
 }
+
 int main(int argc, char *argv[])
 {
     cout << "Load base command ";
@@ -25,6 +32,34 @@ int main(int argc, char *argv[])
     std::thread localcmdthread(localcmd_thread);
     localcmdthread.detach();
     cout << "OK" << endl;
+    cout << "Start database connection ";
+    //Database db;
+    //db.connect("localhost",3306,"chat","FJS8CFhuumsERQbp!","chat");
+    cout << "OK" << endl;
+    //MySqlResult ind = db.query("SELECT * FROM rooms;");
+    //ind.print();
+
+    //cout << ind.value("id") << endl;
+    /*std::string testerd="mymy",saha="AAAAA!";
+    ASLib::AVariant t2,t4,t7; //saha = "AAAAA!"
+    t2=testerd; //saha = непонятно что
+    ASLib::RecursionArray t3,t5,t6;
+    t3["test1"]=t2;
+    t5["testZ"]=saha;
+    t3["test2"]=&t5;
+    t4=t3["test1"];
+    t6=t3["test2"].toMap();
+    t7=t6["testZ"];
+    cout << t4.toString() << t7.toString();*/
+    boost::property_tree::ptree test1,test2;
+    test1.add("test","test1");
+    test1.add("test","test2");
+    test2.add("test2","test1");
+    test1.add_child("test_child",test2);
+
+    RecArrUtils::printTree(test1);
+    std::cout << RecArrUtils::toArcan(RecArrUtils::fromArcan("test1[test1_s]test2[test2_s]test3[test1[1]test2[2]]"));
+    //for(auto &v=test1.begin();v!=test1.end();++v)
     cout << "Start server socket " << flush;
     try
     {

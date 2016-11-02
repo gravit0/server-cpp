@@ -4,12 +4,13 @@
 #include <list>
 #include <boost-server.hpp>
 #include <functional>
+#include "recarray.h"
 class Command{
 public:
-    virtual void operator ()(std::list<std::string>* args,boostserver::client::ptr client) = 0;
+    std::function<void(Command* cmd,const RecursionArray& args,boostserver::client::ptr client)> func;
     std::string name;
     unsigned int minPermissions = 0;
-    virtual ~Command() {}
+    ~Command() {}
 };
 bool initBaseCmds();
 extern list<Command*> _cmds;
