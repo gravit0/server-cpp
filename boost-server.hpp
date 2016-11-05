@@ -38,11 +38,11 @@ public:
 
 class client : public boost::enable_shared_from_this<client>, boost::noncopyable,basic_client
 {
-    asio::ip::tcp::socket sock_;
+    asio::ip::tcp::socket mysocket;
     enum { max_msg = 1024 };
-    char* read_buffer_;
-    char* write_buffer_;
-    bool started_,isreal;
+    char* read_buffer;
+    char* write_buffer;
+    bool isStarted;
     int read_buffer_size,write_buffer_size;
 
     client();
@@ -60,11 +60,10 @@ public:
     void on_read(const boost::system::error_code & err, size_t bytes);
     void on_write(const boost::system::error_code & err, size_t bytes);
     bool started();
-    bool isReal();
     asio::ip::tcp::socket & sock();
     //Расширенные опции
     unsigned int permissionsLevel; //Уровень привилегий пользователя
-    bool isAuth,isTelnetMode; //Авторизирован ли он
+    bool isAuth,isTelnetMode;
     std::string login,nickname,email,groups;
     iterator it;
 };
@@ -104,7 +103,7 @@ public:
     void newThreads(int threadsd);
     void addThread(mythread* thend);
     void autoCommand(MyCommand cmd);
-    list<Command*> _cmds;
+    list<Command*> cmdlist;
     ~SrvControl();
 };
 extern SrvControl service;

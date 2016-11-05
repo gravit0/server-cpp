@@ -55,11 +55,11 @@ bool initBaseCmds()
     {
         client->stop();
     };
-    service._cmds.push_back(cmdsu);
-    service._cmds.push_back(cmdtest);
-    service._cmds.push_back(cmdecho);
-    service._cmds.push_back(cmdtelnet);
-    service._cmds.push_back(cmdclients);
-    service._cmds.push_back(cmddisconnect);
+    service.cmdlist.push_back(cmdsu);
+    service.cmdlist.push_back(cmdtest);
+    service.cmdlist.push_back(cmdecho);
+    service.cmdlist.push_back(cmdtelnet);
+    service.cmdlist.push_back(cmdclients);
+    service.cmdlist.push_back(cmddisconnect);
     return true;
 }

@@ -8,10 +8,10 @@ boost::asio::io_service ioservice;
 #define MEM_FN2(x,y,z) boost::bind(&client::x, shared_from_this(),y,z)
 asio::ip::tcp::endpoint* endpoint;
 asio::ip::tcp::acceptor* acceptor;
-client::client() : sock_(ioservice), started_(false),isreal(true)
+client::client() : mysocket(ioservice), isStarted(false)
 {
-    read_buffer_ = new char[max_msg];
-    write_buffer_ = new char[max_msg];
+    read_buffer = new char[max_msg];
+    write_buffer = new char[max_msg];
     read_buffer_size = max_msg;
     write_buffer_size = max_msg;
     permissionsLevel=0;
@@ -20,10 +20,10 @@ client::client() : sock_(ioservice), started_(false),isreal(true)
 }
 void client::stop()
 {
-    if ( !started_) return;
+    if ( !isStarted) return;
     service.clientlist.erase(it);
-    started_ = false;
-    sock_.close();
+    isStarted = false;
+    mysocket.close();
 }
 client::ptr client::new_()
 {
@@ -32,32 +32,32 @@ client::ptr client::new_()
 }
 void client::start()
 {
-    started_ = true;
+    isStarted = true;
     it=service.clientlist.insert(shared_from_this()).first;
     do_read();
 }
 void client::do_read()
 {
-    async_read(sock_, asio::buffer(read_buffer_,read_buffer_size),
+    async_read(mysocket, asio::buffer(read_buffer,read_buffer_size),
                MEM_FN2(read_complete,_1,_2), MEM_FN2(on_read,_1,_2));
 }
 void client::do_write(const std::string & msg)
 {
     if ( !started() ) return;
-    std::copy(msg.begin(), msg.end(), write_buffer_);
-    sock_.async_write_some( asio::buffer(write_buffer_, msg.size()),
+    std::copy(msg.begin(), msg.end(), write_buffer);
+    mysocket.async_write_some( asio::buffer(write_buffer, msg.size()),
                             MEM_FN2(on_write,_1,_2));
 }
 void client::sync_write(const std::string & msg)
 {
     if ( !started() ) return;
-    std::copy(msg.begin(), msg.end(), write_buffer_);
-    sock_.write_some( asio::buffer(write_buffer_, msg.size()));
+    std::copy(msg.begin(), msg.end(), write_buffer);
+    mysocket.write_some( asio::buffer(write_buffer, msg.size()));
 }
 size_t client::read_complete(const boost::system::error_code & err, size_t bytes)
 {
     if ( err) return 0;
-    bool found = std::find(read_buffer_, read_buffer_ + bytes, '\n') < read_buffer_ + bytes;
+    bool found = std::find(read_buffer, read_buffer + bytes, '\n') < read_buffer + bytes;
 
     return found ? 0 : 1;
 }
@@ -65,7 +65,7 @@ void client::on_read(const boost::system::error_code & err, size_t bytes)
 {
     if ( !err)
     {
-        std::string msg(read_buffer_, bytes);
+        std::string msg(read_buffer, bytes);
         MyCommand cmd;
         cmd.clientptr=shared_from_this();
         cmd.cmd=msg;
@@ -122,22 +122,18 @@ void SrvControl::autoCommand(MyCommand cmd)
 void client::on_write(const boost::system::error_code & err, size_t bytes)
 {
 }
-bool client::isReal()
-{
-    return isreal;
-}
 
 client::~client()
 {
     cout << "Дестркутор!" << endl;
     cout << flush;
-    if(started_) service.clientlist.erase(it);
-    delete[] read_buffer_;
-    delete[] write_buffer_;
+    if(isStarted) service.clientlist.erase(it);
+    delete[] read_buffer;
+    delete[] write_buffer;
 }
 
-bool client::started() {return started_;}
-asio::ip::tcp::socket & client::sock() { return sock_;}
+bool client::started() {return isStarted;}
+asio::ip::tcp::socket & client::sock() { return mysocket;}
 bool mythread::isStart() const
 {
     return _isStart;
@@ -180,7 +176,7 @@ void ComandUse(mythread* me,MyCommand* thiscmd)
         }
         else return;
     }
-    for(auto i = boostserver::service._cmds.begin();i!=boostserver::service._cmds.end();++i)
+    for(auto i = boostserver::service.cmdlist.begin();i!=boostserver::service.cmdlist.end();++i)
     {
         if((*i)->name==cmdname)
         {
