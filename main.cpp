@@ -1,12 +1,13 @@
-#include <main.hpp>
+#include <boost-server.hpp>
 #include <boost/any.hpp>
-#include "abstractcommand.h"
+#include "boost-server.hpp"
 #include "database.h"
 //#include "recursionarray.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/foreach.hpp>
 #include <recarray.h>
+#include "config.h"
 std::string  config_mysql_login,config_mysql_password,config_mysql_dbname,config_mysql_host;
 int config_mysql_port;
 void localcmd_thread()
@@ -22,15 +23,18 @@ void localcmd_thread()
 
 int main(int argc, char *argv[])
 {
+    cout << "Load configs ";
+    config_mysql_login="localhost";
+    config_mysql_dbname="chat";
+    config_mysql_password="FJS8CFhuumsERQbp!";
+    config_mysql_port=3306;
+    boostserver::ep= new boost::asio::ip::tcp::endpoint( boost::asio::ip::address::from_string(CONFIG_SERVER_HOST), CONFIG_SERVER_PORT);
+    cout << "OK" << endl;
     cout << "Load base command ";
     if(initBaseCmds())
         cout << "OK" << endl;
     else
         cout << "Fail" << endl;
-    config_mysql_login="localhost";
-    config_mysql_dbname="chat";
-    config_mysql_password="FJS8CFhuumsERQbp!";
-    config_mysql_port=3306;
     cout << "Start threads ";
     boostserver::threadcontrol.newThreads(2);
     cout << "OK" << endl;
@@ -69,7 +73,7 @@ int main(int argc, char *argv[])
     cout << "Start server socket " << flush;
     try
     {
-        boostserver::acceptor=new boost::asio::ip::tcp::acceptor(boostserver::ioserv,boostserver::ep);
+        boostserver::acceptor=new boost::asio::ip::tcp::acceptor(boostserver::ioserv,*boostserver::ep);
         boostserver::client::ptr cliente = boostserver::client::new_();
         boostserver::acceptor->async_accept(cliente->sock(), boost::bind(boostserver::handle_accept,cliente,_1));
     }
@@ -83,5 +87,8 @@ int main(int argc, char *argv[])
     cout << "OK" << endl;
     cout << "Server started " << endl;
     boostserver::ioserv.run();
+    cout << "Exit ";
+    delete boostserver::ep;
+    cout << "OK" << endl;
     return 0;
 }

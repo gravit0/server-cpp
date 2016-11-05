@@ -1,5 +1,4 @@
 #include <boost-server.hpp>
-#include <abstractcommand.h>
 namespace boostserver
 {
 thread_control threadcontrol;
@@ -7,7 +6,7 @@ boost::asio::io_service ioserv;
 #define MEM_FN(x) boost::bind(&client::x, shared_from_this())
 #define MEM_FN1(x,y) boost::bind(&client::x, shared_from_this(),y)
 #define MEM_FN2(x,y,z) boost::bind(&client::x, shared_from_this(),y,z)
-asio::ip::tcp::endpoint ep( asio::ip::address::from_string("127.0.0.1"), 8001);
+asio::ip::tcp::endpoint* ep;
 asio::ip::tcp::acceptor* acceptor;
 client::client() : sock_(ioserv), started_(false),isreal(true)
 {
@@ -17,10 +16,12 @@ client::client() : sock_(ioserv), started_(false),isreal(true)
     write_buffer_size = max_msg;
     permissionsLevel=0;
     isAuth=false;
+    isTelnetMode=false;
 }
 void client::stop()
 {
     if ( !started_) return;
+    threadcontrol.clientlist.erase(it);
     started_ = false;
     sock_.close();
 }
@@ -32,6 +33,7 @@ client::ptr client::new_()
 void client::start()
 {
     started_ = true;
+    it=threadcontrol.clientlist.insert(shared_from_this()).first;
     do_read();
 }
 void client::do_read()
@@ -74,6 +76,7 @@ void client::on_read(const boost::system::error_code & err, size_t bytes)
     {
         if(err!=asio::error::eof)
             cerr << err.message() << endl;
+        else stop();
     }
 }
 void thread_control::newThread()
@@ -128,6 +131,7 @@ client::~client()
 {
     cout << "Дестркутор!" << endl;
     cout << flush;
+    if(started_) threadcontrol.clientlist.erase(it);
     delete[] read_buffer_;
     delete[] write_buffer_;
 }
@@ -162,19 +166,56 @@ void mythread::run(mythread* me)
 void ComandUse(mythread* me,MyCommand* thiscmd)
 {
     RecursionArray arr=RecArrUtils::fromArcan(thiscmd->cmd);
+    if(thiscmd->cmd.empty()) return;
     std::string cmdname=RecArrUtils::getString(arr,"type");
-    for(auto i = _cmds.begin();i!=_cmds.end();++i)
+    if(cmdname.empty())
+    {
+        int cmdsize=thiscmd->cmd.size();
+        if(cmdsize>2)
+        {
+            if(thiscmd->cmd.at(cmdsize-1)=='\n' && thiscmd->cmd.at(cmdsize-2)=='\r')
+                cmdname=thiscmd->cmd.substr(0,cmdsize-2);
+            else
+                cmdname=thiscmd->cmd;
+        }
+        else return;
+    }
+    for(auto i = boostserver::threadcontrol._cmds.begin();i!=boostserver::threadcontrol._cmds.end();++i)
     {
         if((*i)->name==cmdname)
         {
             if(thiscmd->clientptr->permissionsLevel>=(*i)->minPermissions)
                 (*i)->func(me,(*i),arr,thiscmd->clientptr);
             else
-                thiscmd->clientptr->do_write("Not Permissions\n");
+            {
+                if(thiscmd->clientptr->isTelnetMode) thiscmd->clientptr->do_write("Not Permissions");
+                else
+                {
+                    RecursionArray result;
+                    result.add("key","31");
+                    thiscmd->clientptr->do_write(RecArrUtils::toArcan(result));
+                }
+            }
+            if(thiscmd->clientptr->isTelnetMode)
+            {
+                if(thiscmd->clientptr->permissionsLevel==5)thiscmd->clientptr->do_write("\n#");
+                else thiscmd->clientptr->do_write("\n$");
+            }
             return;
         }
     }
-    thiscmd->clientptr->do_write("Command not found\n");
+    if(thiscmd->clientptr->isTelnetMode)
+    {
+        thiscmd->clientptr->do_write("Command not found");
+        if(thiscmd->clientptr->permissionsLevel==5)thiscmd->clientptr->do_write("\n#");
+        else thiscmd->clientptr->do_write("\n$");
+    }
+    else
+    {
+        RecursionArray result;
+        result.add("key","33");
+        thiscmd->clientptr->do_write(RecArrUtils::toArcan(result));
+    }
 }
 thread_control::~thread_control()
 {

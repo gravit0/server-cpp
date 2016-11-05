@@ -53,6 +53,7 @@ std::string getString(const RecursionArray& tree,std::string key)
         if(tmp.empty())
             if(v.first==key) return v.second.get<std::string>("");
     }
+    return "";
 }
 std::string toArcan(const RecursionArray& tree)
 {

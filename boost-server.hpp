@@ -9,9 +9,14 @@
 #include <boost/variant.hpp>
 #include <list>
 #include <queue>
+#include <string>
 #include <functional>
 #include <thread>
 #include "database.h"
+#include <functional>
+#include <set>
+#include "recarray.h"
+bool initBaseCmds();
 using namespace std;
 extern std::string  config_mysql_login,config_mysql_password,config_mysql_dbname,config_mysql_host;
 extern int config_mysql_port;
@@ -44,6 +49,7 @@ class client : public boost::enable_shared_from_this<client>, boost::noncopyable
 public:
     virtual ~client();
     typedef boost::shared_ptr<client> ptr;
+    typedef set<client::ptr>::iterator iterator;
     void stop();
     static ptr new_();
     void start();
@@ -58,8 +64,9 @@ public:
     asio::ip::tcp::socket & sock();
     //Расширенные опции
     unsigned int permissionsLevel; //Уровень привилегий пользователя
-    bool isAuth; //Авторизирован ли он
+    bool isAuth,isTelnetMode; //Авторизирован ли он
     std::string login,nickname,email,groups;
+    iterator it;
 };
 
 struct MyCommand
@@ -80,6 +87,13 @@ public:
     bool isStart() const;
 };
 void ComandUse(mythread* me, MyCommand *thiscmd);
+class Command{
+public:
+    std::function<void(mythread* me,Command* cmd,const RecursionArray& args,client::ptr client)> func;
+    std::string name;
+    unsigned int minPermissions = 0;
+    ~Command() {}
+};
 class thread_control
 {
     list<mythread*> threads;
@@ -89,11 +103,13 @@ public:
     void newThreads(unsigned int threadsd);
     void addThread(mythread* thend);
     void autoCommand(MyCommand cmd);
+    list<Command*> _cmds;
+    set<client::ptr> clientlist;
     ~thread_control();
 };
 extern thread_control threadcontrol;
 extern asio::ip::tcp::acceptor* acceptor;
-extern asio::ip::tcp::endpoint ep;
+extern asio::ip::tcp::endpoint* ep;
 extern boost::asio::io_service ioserv;
 void handle_accept(client::ptr client, const boost::system::error_code & err);
 }
