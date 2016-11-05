@@ -1,6 +1,6 @@
 #include <boost-server.hpp>
 using boostserver::Command;
-using boostserver::threadcontrol;
+using boostserver::service;
 using namespace RecArrUtils;
 bool initBaseCmds()
 {
@@ -16,7 +16,7 @@ bool initBaseCmds()
     cmdsu->name="su";
     cmdsu->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
-        if(client->sock().remote_endpoint().address()==boostserver::ep->address())
+        if(client->sock().remote_endpoint().address()==boostserver::endpoint->address())
         {
             client->permissionsLevel=5;
             RecursionArray result;
@@ -45,7 +45,7 @@ bool initBaseCmds()
     cmdclients->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         RecursionArray result;
-        result.add("result",std::to_string(threadcontrol.clientlist.size()));
+        result.add("result",std::to_string(service.clientlist.size()));
         result.add("key","1");
         client->do_write(toArcan(result));
     };
@@ -55,11 +55,11 @@ bool initBaseCmds()
     {
         client->stop();
     };
-    threadcontrol._cmds.push_back(cmdsu);
-    threadcontrol._cmds.push_back(cmdtest);
-    threadcontrol._cmds.push_back(cmdecho);
-    threadcontrol._cmds.push_back(cmdtelnet);
-    threadcontrol._cmds.push_back(cmdclients);
-    threadcontrol._cmds.push_back(cmddisconnect);
+    service._cmds.push_back(cmdsu);
+    service._cmds.push_back(cmdtest);
+    service._cmds.push_back(cmdecho);
+    service._cmds.push_back(cmdtelnet);
+    service._cmds.push_back(cmdclients);
+    service._cmds.push_back(cmddisconnect);
     return true;
 }

@@ -1,14 +1,14 @@
 #include <boost-server.hpp>
 namespace boostserver
 {
-thread_control threadcontrol;
-boost::asio::io_service ioserv;
+SrvControl service;
+boost::asio::io_service ioservice;
 #define MEM_FN(x) boost::bind(&client::x, shared_from_this())
 #define MEM_FN1(x,y) boost::bind(&client::x, shared_from_this(),y)
 #define MEM_FN2(x,y,z) boost::bind(&client::x, shared_from_this(),y,z)
-asio::ip::tcp::endpoint* ep;
+asio::ip::tcp::endpoint* endpoint;
 asio::ip::tcp::acceptor* acceptor;
-client::client() : sock_(ioserv), started_(false),isreal(true)
+client::client() : sock_(ioservice), started_(false),isreal(true)
 {
     read_buffer_ = new char[max_msg];
     write_buffer_ = new char[max_msg];
@@ -21,7 +21,7 @@ client::client() : sock_(ioserv), started_(false),isreal(true)
 void client::stop()
 {
     if ( !started_) return;
-    threadcontrol.clientlist.erase(it);
+    service.clientlist.erase(it);
     started_ = false;
     sock_.close();
 }
@@ -33,7 +33,7 @@ client::ptr client::new_()
 void client::start()
 {
     started_ = true;
-    it=threadcontrol.clientlist.insert(shared_from_this()).first;
+    it=service.clientlist.insert(shared_from_this()).first;
     do_read();
 }
 void client::do_read()
@@ -69,7 +69,7 @@ void client::on_read(const boost::system::error_code & err, size_t bytes)
         MyCommand cmd;
         cmd.clientptr=shared_from_this();
         cmd.cmd=msg;
-        threadcontrol.autoCommand(cmd);
+        service.autoCommand(cmd);
         //do_read();
     }
     else
@@ -79,14 +79,14 @@ void client::on_read(const boost::system::error_code & err, size_t bytes)
         else stop();
     }
 }
-void thread_control::newThread()
+void SrvControl::newThread()
 {
     mythread* then = new mythread();
     then->db.connect(config_mysql_host,config_mysql_port,config_mysql_login,config_mysql_password,config_mysql_dbname);
     threads.push_back(then);
-    newThreadsd++;
+    coutNewThreads++;
 }
-void thread_control::newThreads(unsigned int threadsd)
+void SrvControl::newThreads(int threadsd)
 {
     for(int  i=0;i<threadsd;++i)
     {
@@ -94,14 +94,14 @@ void thread_control::newThreads(unsigned int threadsd)
         then->db.connect(config_mysql_host,config_mysql_port,config_mysql_login,config_mysql_password,config_mysql_dbname);
         threads.push_back(then);
     }
-    newThreadsd+=threadsd;
+    coutNewThreads+=threadsd;
 }
-void thread_control::addThread(mythread* thend)
+void SrvControl::addThread(mythread* thend)
 {
     threads.push_back(thend);
-    addThreads++;
+    coutAddThreads++;
 }
-void thread_control::autoCommand(MyCommand cmd)
+void SrvControl::autoCommand(MyCommand cmd)
 {
     unsigned int maxmessages=0;
     auto i = threads.begin(), thisthread = threads.begin();
@@ -131,7 +131,7 @@ client::~client()
 {
     cout << "Дестркутор!" << endl;
     cout << flush;
-    if(started_) threadcontrol.clientlist.erase(it);
+    if(started_) service.clientlist.erase(it);
     delete[] read_buffer_;
     delete[] write_buffer_;
 }
@@ -180,7 +180,7 @@ void ComandUse(mythread* me,MyCommand* thiscmd)
         }
         else return;
     }
-    for(auto i = boostserver::threadcontrol._cmds.begin();i!=boostserver::threadcontrol._cmds.end();++i)
+    for(auto i = boostserver::service._cmds.begin();i!=boostserver::service._cmds.end();++i)
     {
         if((*i)->name==cmdname)
         {
@@ -217,7 +217,7 @@ void ComandUse(mythread* me,MyCommand* thiscmd)
         thiscmd->clientptr->do_write(RecArrUtils::toArcan(result));
     }
 }
-thread_control::~thread_control()
+SrvControl::~SrvControl()
 {
 }
 

@@ -94,23 +94,23 @@ public:
     unsigned int minPermissions = 0;
     ~Command() {}
 };
-class thread_control
+class SrvControl
 {
-    list<mythread*> threads;
-    unsigned long long int addThreads=0,newThreadsd=0;
 public:
+    list<mythread*> threads;
+    set<client::ptr> clientlist;
+    unsigned long long int coutAddThreads=0,coutNewThreads=0;
     void newThread();
-    void newThreads(unsigned int threadsd);
+    void newThreads(int threadsd);
     void addThread(mythread* thend);
     void autoCommand(MyCommand cmd);
     list<Command*> _cmds;
-    set<client::ptr> clientlist;
-    ~thread_control();
+    ~SrvControl();
 };
-extern thread_control threadcontrol;
+extern SrvControl service;
 extern asio::ip::tcp::acceptor* acceptor;
-extern asio::ip::tcp::endpoint* ep;
-extern boost::asio::io_service ioserv;
+extern asio::ip::tcp::endpoint* endpoint;
+extern boost::asio::io_service ioservice;
 void handle_accept(client::ptr client, const boost::system::error_code & err);
 }
 #endif // BOOSTSERVER_HPP

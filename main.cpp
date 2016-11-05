@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     config_mysql_dbname="chat";
     config_mysql_password="FJS8CFhuumsERQbp!";
     config_mysql_port=3306;
-    boostserver::ep= new boost::asio::ip::tcp::endpoint( boost::asio::ip::address::from_string(CONFIG_SERVER_HOST), CONFIG_SERVER_PORT);
+    boostserver::endpoint= new boost::asio::ip::tcp::endpoint( boost::asio::ip::address::from_string(CONFIG_SERVER_HOST), CONFIG_SERVER_PORT);
     cout << "OK" << endl;
     cout << "Load base command ";
     if(initBaseCmds())
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     else
         cout << "Fail" << endl;
     cout << "Start threads ";
-    boostserver::threadcontrol.newThreads(2);
+    boostserver::service.newThreads(2);
     cout << "OK" << endl;
     cout << "Start local thread ";
     std::thread localcmdthread(localcmd_thread);
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     cout << "Start server socket " << flush;
     try
     {
-        boostserver::acceptor=new boost::asio::ip::tcp::acceptor(boostserver::ioserv,*boostserver::ep);
+        boostserver::acceptor=new boost::asio::ip::tcp::acceptor(boostserver::ioservice,*boostserver::endpoint);
         boostserver::client::ptr cliente = boostserver::client::new_();
         boostserver::acceptor->async_accept(cliente->sock(), boost::bind(boostserver::handle_accept,cliente,_1));
     }
@@ -86,9 +86,9 @@ int main(int argc, char *argv[])
 
     cout << "OK" << endl;
     cout << "Server started " << endl;
-    boostserver::ioserv.run();
+    boostserver::ioservice.run();
     cout << "Exit ";
-    delete boostserver::ep;
+    delete boostserver::endpoint;
     cout << "OK" << endl;
     return 0;
 }
