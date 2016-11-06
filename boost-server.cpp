@@ -101,6 +101,24 @@ void SrvControl::addThread(mythread* thend)
     threads.push_back(thend);
     coutAddThreads++;
 }
+void SrvControl::cmdsclear()
+{
+    for(auto i =cmdlist.begin();i!=cmdlist.end();++i)
+    {
+        Command* ptr =(*i);
+        delete ptr;
+    }
+    cmdlist.clear();
+}
+void SrvControl::closeclients()
+{
+    for(auto i =clientlist.begin();i!=clientlist.end();++i)
+    {
+        (*i)->stop();
+    }
+    std::cout << "All client kicked" << std::endl << std::flush;
+}
+
 void SrvControl::autoCommand(MyCommand cmd)
 {
     unsigned int maxmessages=0;
@@ -215,6 +233,10 @@ void ComandUse(mythread* me,MyCommand* thiscmd)
 }
 SrvControl::~SrvControl()
 {
+}
+bool SrvControl::addCommand(Command* cmd)
+{
+    cmdlist.push_back(cmd);
 }
 
 mythread::~mythread()

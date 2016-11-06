@@ -12,13 +12,24 @@ std::string  config_mysql_login,config_mysql_password,config_mysql_dbname,config
 int config_mysql_port;
 void localcmd_thread()
 {
-    std::string cmd;
-    cin >> cmd;
-    if(cmd=="info")
+    bool isStarted=true;
+    while(isStarted)
     {
-        cout << "info OK";
+        std::string cmd;
+        cin >> cmd;
+        if(cmd=="info")
+        {
+            cout << "info OK";
+        }
+        else if(cmd=="stop")
+        {
+            boostserver::service.cmdsclear();
+            boostserver::service.closeclients();
+            delete boostserver::endpoint;
+            std::terminate();
+        }
+        cout << flush;
     }
-    cout << flush;
 }
 
 int main(int argc, char *argv[])
@@ -87,8 +98,5 @@ int main(int argc, char *argv[])
     cout << "OK" << endl;
     cout << "Server started " << endl;
     boostserver::ioservice.run();
-    cout << "Exit ";
-    delete boostserver::endpoint;
-    cout << "OK" << endl;
     return 0;
 }

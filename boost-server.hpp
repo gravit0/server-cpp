@@ -91,7 +91,7 @@ public:
     std::function<void(mythread* me,Command* cmd,const RecursionArray& args,client::ptr client)> func;
     std::string name;
     unsigned int minPermissions = 0;
-    ~Command() {}
+    ~Command() {std::cout << "Комманда " << name << " выгружена" << std::endl << std::flush;}
 };
 class SrvControl
 {
@@ -103,6 +103,9 @@ public:
     void newThreads(int threadsd);
     void addThread(mythread* thend);
     void autoCommand(MyCommand cmd);
+    bool addCommand(Command* cmd);
+    void cmdsclear();
+    void closeclients();
     list<Command*> cmdlist;
     ~SrvControl();
 };
