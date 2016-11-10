@@ -18,6 +18,10 @@ client::client() : mysocket(ioservice), isStarted(false)
     isAuth=false;
     isTelnetMode=false;
 }
+Command::~Command()
+{
+    std::cout << "Комманда " << name << " выгружена" << std::endl << std::flush;
+}
 void client::stop()
 {
     if ( !isStarted) return;

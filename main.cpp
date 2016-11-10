@@ -10,6 +10,8 @@
 #include "config.h"
 std::string  config_mysql_login,config_mysql_password,config_mysql_dbname,config_mysql_host;
 int config_mysql_port;
+using boostserver::service;
+using boostserver::SrvControl;
 void localcmd_thread()
 {
     bool isStarted=true;
@@ -23,8 +25,8 @@ void localcmd_thread()
         }
         else if(cmd=="stop")
         {
-            boostserver::service.cmdsclear();
-            boostserver::service.closeclients();
+            service.cmdsclear();
+            service.closeclients();
             delete boostserver::endpoint;
             std::terminate();
         }
@@ -34,6 +36,7 @@ void localcmd_thread()
 
 int main(int argc, char *argv[])
 {
+    service.thisstatus=SrvControl::status::preload;
     cout << "Load configs ";
     config_mysql_login="localhost";
     config_mysql_dbname="chat";
@@ -46,6 +49,7 @@ int main(int argc, char *argv[])
         cout << "OK" << endl;
     else
         cout << "Fail" << endl;
+    service.thisstatus=SrvControl::status::loading;
     cout << "Start threads ";
     boostserver::service.newThreads(2);
     cout << "OK" << endl;
@@ -94,8 +98,8 @@ int main(int argc, char *argv[])
         cout << a.what() << endl;
         return 1;
     }
-
     cout << "OK" << endl;
+    service.thisstatus=SrvControl::status::started;
     cout << "Server started " << endl;
     boostserver::ioservice.run();
     return 0;

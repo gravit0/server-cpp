@@ -108,6 +108,16 @@ public:
     void closeclients();
     list<Command*> cmdlist;
     ~SrvControl();
+    enum class status
+    {
+        preload,
+        loading,
+        started,
+        prestopping,
+        stopping,
+        close
+    };
+    status thisstatus;
 };
 extern SrvControl service;
 extern asio::ip::tcp::acceptor* acceptor;
