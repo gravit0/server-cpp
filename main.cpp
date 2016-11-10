@@ -49,6 +49,11 @@ int main(int argc, char *argv[])
         cout << "OK" << endl;
     else
         cout << "Fail" << endl;
+    cout << "Load test command ";
+    if(initTestCmds())
+        cout << "OK" << endl;
+    else
+        cout << "Fail" << endl;
     service.thisstatus=SrvControl::status::loading;
     cout << "Start threads ";
     boostserver::service.newThreads(2);

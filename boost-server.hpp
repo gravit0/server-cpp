@@ -17,6 +17,7 @@
 #include <set>
 #include "recarray.h"
 bool initBaseCmds();
+bool initTestCmds();
 using namespace std;
 extern std::string  config_mysql_login,config_mysql_password,config_mysql_dbname,config_mysql_host;
 extern int config_mysql_port;
@@ -34,6 +35,11 @@ public:
     virtual void sync_write(const std::string & msg) = 0;
     virtual bool started() = 0;
     virtual ~basic_client() {}
+};
+struct event
+{
+    std::string text;
+    bool isReaded;
 };
 
 class client : public boost::enable_shared_from_this<client>, boost::noncopyable,basic_client
@@ -60,12 +66,14 @@ public:
     void on_read(const boost::system::error_code & err, size_t bytes);
     void on_write(const boost::system::error_code & err, size_t bytes);
     bool started();
+    bool newEvent(std::string text);
     asio::ip::tcp::socket & sock();
     //Расширенные опции
     unsigned int permissionsLevel; //Уровень привилегий пользователя
-    bool isAuth,isTelnetMode;
+    bool isAuth,isTelnetMode,isPassiveMode;
     std::string login,nickname,email,groups;
     iterator it;
+    std::list<event> events;
 };
 
 struct MyCommand
@@ -91,7 +99,7 @@ public:
     std::function<void(mythread* me,Command* cmd,const RecursionArray& args,client::ptr client)> func;
     std::string name;
     unsigned int minPermissions = 0;
-    ~Command() {std::cout << "Комманда " << name << " выгружена" << std::endl << std::flush;}
+    ~Command();
 };
 class SrvControl
 {

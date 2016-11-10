@@ -10,12 +10,23 @@ using namespace RecArrUtils;
     service.cmdlist.push_back(varname)
 bool initBaseCmds()
 {
-    Command* cmdtest=new Command();
-    cmdtest->name="test";
-    cmdtest->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
+    Command* cmdclients=new Command();
+    cmdclients->name="clients";
+    cmdclients->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         RecursionArray result;
+        result.add("cout",std::to_string(service.clientlist.size()));
         result.add("key","1");
+        if(client->permissionsLevel>=3)
+        {
+            int i=0;
+            RecursionArray result2;
+            for(auto it = service.clientlist.begin();it!=service.clientlist.end();++it)
+            {
+                result2.add(std::to_string(i),(*it)->sock().remote_endpoint().address().to_string());
+            }
+            result.add_child("clients",result2);
+        }
         client->do_write(toArcan(result));
     };
     Command* cmdsu=new Command();
@@ -31,42 +42,73 @@ bool initBaseCmds()
             //client->do_write("Superuser Active\n");
         }
     };
-    Command* cmdecho=new Command();
-    cmdecho->name="echo";
-    cmdecho->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
-    {
-        client->do_write(RecArrUtils::printTreeEx(args));
-    };
-    Command* cmdtelnet=new Command();
-    cmdtelnet->name="telnet";
-    cmdtelnet->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
-    {
-        client->isTelnetMode=!client->isTelnetMode;
-        RecursionArray result;
-        result.add("key","1");
-        client->do_write(toArcan(result));
-    };
-    Command* cmdclients=new Command();
-    cmdclients->name="clients";
-    cmdclients->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
-    {
-        RecursionArray result;
-        result.add("result",std::to_string(service.clientlist.size()));
-        result.add("key","1");
-        client->do_write(toArcan(result));
-    };
     Command* cmddisconnect=new Command();
     cmddisconnect->name="disconnect";
     cmddisconnect->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         client->stop();
     };
+    Command* cmdgetevent=new Command();
+    cmdgetevent->name="getevent";
+    cmdgetevent->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
+    {
+        RecursionArray result;
+        result.add("key","1");
+        int i=0;
+        for(auto it = client->events.begin();it!=client->events.end();++it)
+        {
+            RecursionArray result2;
+            result2.add("text",(*it).text);
+            if((*it).isReaded)
+            {
+                result2.add("status","1");
+
+            }
+            else
+            {
+                result2.add("status","0");
+                (*it).isReaded=true;
+            }
+            result.add_child(std::to_string(i),result2);
+            ++i;
+        }
+        if(RecArrUtils::getString(args,"clean")!="false")
+        {
+            client->events.clear();
+        }
+        client->do_write(toArcan(result));
+    };
+    Command* cmdseteventmode=new Command();
+    cmdseteventmode->name="seteventmode";
+    cmdseteventmode->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
+    {
+        client->isPassiveMode=!client->isPassiveMode;
+        RecursionArray result;
+        result.add("key","1");
+        client->do_write(toArcan(result));
+    };
+    Command* cmdplugins=new Command();
+    cmdplugins->name="plugins";
+    cmdplugins->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
+    {
+        RecursionArray result,result2;
+        result.add("key","1");
+        result.add("cout",std::to_string(service.cmdlist.size()));
+        int i=0;
+        for(auto it = service.cmdlist.begin();it!=service.cmdlist.end();++it)
+        {
+            result2.add(std::to_string(i),(*it)->name);
+            ++i;
+        }
+        result.add_child("plugins",result2);
+        client->do_write(toArcan(result));
+    };
     service.cmdlist.push_back(cmdsu);
-    service.cmdlist.push_back(cmdtest);
-    service.cmdlist.push_back(cmdecho);
-    service.cmdlist.push_back(cmdtelnet);
     service.cmdlist.push_back(cmdclients);
     service.cmdlist.push_back(cmddisconnect);
+    service.cmdlist.push_back(cmdgetevent);
+    service.cmdlist.push_back(cmdseteventmode);
+    service.cmdlist.push_back(cmdplugins);
     return true;
 }
 #undef InitCmd

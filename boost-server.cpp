@@ -17,6 +17,7 @@ client::client() : mysocket(ioservice), isStarted(false)
     permissionsLevel=0;
     isAuth=false;
     isTelnetMode=false;
+    isPassiveMode=false;
 }
 Command::~Command()
 {
@@ -34,6 +35,28 @@ client::ptr client::new_()
     ptr new_(new client);
     return new_;
 }
+bool client::newEvent(std::string text)
+{
+    event result;
+    result.text=text;
+    if(isPassiveMode)
+    {
+        result.isReaded=true;
+        events.push_back(result);
+        RecursionArray rec;
+        rec.add("key","20");
+        rec.add("text",text);
+        do_write(RecArrUtils::toArcan(rec));
+        return false;
+    }
+    else
+    {
+        result.isReaded=false;
+        events.push_back(result);
+        return true;
+    }
+}
+
 void client::start()
 {
     isStarted = true;
@@ -241,6 +264,7 @@ SrvControl::~SrvControl()
 bool SrvControl::addCommand(Command* cmd)
 {
     cmdlist.push_back(cmd);
+    return true;
 }
 
 mythread::~mythread()
