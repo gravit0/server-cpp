@@ -208,7 +208,7 @@ void ComandUse(mythread* me,MyCommand* thiscmd)
 {
     RecursionArray arr=RecArrUtils::fromArcan(thiscmd->cmd);
     if(thiscmd->cmd.empty()) return;
-    std::string cmdname=RecArrUtils::getString(arr,"type");
+    std::string cmdname=arr.get<std::string>("type","");
     if(cmdname.empty())
     {
         int cmdsize=thiscmd->cmd.size();

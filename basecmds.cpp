@@ -72,7 +72,7 @@ bool initBaseCmds()
             result.add_child(std::to_string(i),result2);
             ++i;
         }
-        if(RecArrUtils::getString(args,"clean")!="false")
+        if(args.get<std::string>("clean","true")!="false")
         {
             client->events.clear();
         }

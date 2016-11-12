@@ -8,7 +8,7 @@ namespace RecArrUtils
 void printTree(const RecursionArray& tree);
 RecursionArray fromArcan(const std::string& str);
 std::string toArcan(const RecursionArray& tree);
-std::string getString(const RecursionArray& tree,std::string key);
+std::string toCfg(const RecursionArray& tree, const std::string& prefix="");
 std::string printTreeEx(const RecursionArray& tree);
 }
 #endif // RECARRAY_H
