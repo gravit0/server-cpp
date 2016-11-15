@@ -39,7 +39,7 @@ std::string printTreeEx(const RecursionArray& tree)
         else
         {
             steam << "Map " << v.first << std::endl;
-            printTreeEx(tmp);
+            steam << printTreeEx(tmp);
             steam << "End" << std::endl;
         }
     }
@@ -52,7 +52,31 @@ std::string toArcan(const RecursionArray& tree)
     {
         boost::property_tree::ptree tmp = v.second.get_child("");
         if(tmp.empty())
+        {
+            std::string second = v.second.get<std::string>("");
+            int tPos=0;
+            while(true)
+            {
+                tPos=second.find("\\[");
+                if(tPos<0) break;
+                second.replace(tPos,2,"[");
+            }
+            tPos=0;
+            while(true)
+            {
+                tPos=second.find("\\]");
+                if(tPos<0) break;
+                second.replace(tPos,2,"]");
+            }
+            tPos=0;
+            while(true)
+            {
+                tPos=second.find("\\\\");
+                if(tPos<0) break;
+                second.replace(tPos,2,"\\");
+            }
             steam << v.first << "[" << v.second.get<std::string>("") << "]";
+        }
         else
         {
             steam << v.first << "[" << toArcan(tmp) << "]";
@@ -75,69 +99,86 @@ std::string toCfg(const RecursionArray& tree, const std::string& prefix)
     }
     return steam.str();
 }
+int findNoSlash(const std::string& str,const char ch, const unsigned int frist_pos,bool* isReplaceT,bool* isReplaceS)
+{
+    bool NoAdept=false;
+    unsigned int size=str.size();
+    for(unsigned int i=frist_pos;i<size;++i)
+    {
+        char thch=str[i];
+        if(thch=='\\')
+        {
+            if(NoAdept)
+            {
+                *isReplaceS=true;
+            }
+            NoAdept=!NoAdept;
+        }
+        else
+        {
+            if(!NoAdept)
+            {
+                if(thch==ch)
+                {
+                    return (int)i;
+                }
+            }
+            else
+            {
+                NoAdept=false;
+                *isReplaceT=true;
+            }
+        }
+    }
+    return -1;
+}
+
 RecursionArray fromArcan(const std::string &str)
 {
     RecursionArray arr;
     int i=0;
     while(i<str.size())
     {
-        bool isReplaseA=false,isReplaseB=false;
+        bool isReplaseA=false,isReplaseB=false,isReplaceC=false;
         int first_pos=str.find('[',i);
         if(first_pos<0 || first_pos==i) break;
         std::string first=str.substr(i,first_pos-i);
-        int second_pos=str.find(']',first_pos);
-        if(second_pos<0 || second_pos-1==first_pos) break;
-        while(str.at(second_pos-1)=='\\')
+        //int second_pos=str.find(']',first_pos);
+        int second_pos=findNoSlash(str,']',first_pos,&isReplaseB,&isReplaceC);
+        if(second_pos<0) break;
+        /*if(second_pos-1==first_pos)
         {
-            second_pos=str.find(']',second_pos+1);
-            if(second_pos<0) break;
-            isReplaseB=true;
-        }
-        int recursion_pos=str.find('[',first_pos+1);
+            i=second_pos+1;
+            continue;
+        }*/
+        int recursion_pos=findNoSlash(str,'[',first_pos+1,&isReplaseA,&isReplaceC);
         if(recursion_pos>0)
         {
-            while(str.at(recursion_pos-1)=='\\')
-            {
-                recursion_pos=str.find('[',recursion_pos+1);
-                if(recursion_pos<0) goto norecursion;
-                isReplaseA=true;
-            }
             if(recursion_pos<second_pos)
             {
 
                 int recursions=1;
                 while(recursion_pos<second_pos)
                 {
-                    recursion_pos=str.find('[',recursion_pos+1);
-                    while(str.at(recursion_pos-1)=='\\')
-                    {
-                        recursion_pos=str.find('[',recursion_pos+1);
-                        if(recursion_pos<0) return arr;
-                        isReplaseA=true;
-
-                    }
+                    recursion_pos=findNoSlash(str,'[',recursion_pos+1,&isReplaseA,&isReplaceC);
                     recursions++;
+                    if(recursion_pos<0) break;
                 }
                 int last_second=second_pos;
                 while(recursions>0)
                 {
-                    last_second=str.find(']',last_second+1);
+                    last_second=findNoSlash(str,']',last_second+1,&isReplaseB,&isReplaceC);
                     if(last_second<0) return arr;
-                    while(str.at(last_second-1)=='\\')
-                    {
-                        last_second=str.find(']',last_second+1);
-                        if(last_second<0) return arr;
-                        isReplaseB=true;
-                    }
                     recursions--;
                 }
                 if(last_second<0) break;
                 std::string second=str.substr(first_pos+1,last_second-first_pos-1);
-                if(isReplaseA)
+                /*if(isReplaseA)
                 {
                     int tPos=0;
-                    while(tPos=second.find("\\["))
+                    while(true)
                     {
+                        tPos=second.find("\\[");
                         if(tPos<0) break;
                         second.replace(tPos,2,"[");
                     }
@@ -145,12 +186,23 @@ RecursionArray fromArcan(const std::string &str)
                 if(isReplaseB)
                 {
                     int tPos=0;
-                    while(tPos=second.find("\\]"))
+                    while(true)
                     {
+                        tPos=second.find("\\]");
                         if(tPos<0) break;
                         second.replace(tPos,2,"]");
                     }
                 }
+                if(isReplaceC)
+                {
+                    int tPos=0;
+                    while(true)
+                    {
+                        tPos=second.find("\\\\");
+                        if(tPos<0) break;
+                        second.replace(tPos,2,"\\");
+                    }
+                }*/
                 arr.add_child(first,fromArcan(second));
                 i=last_second+1;
                 continue;
@@ -161,8 +213,9 @@ RecursionArray fromArcan(const std::string &str)
         if(isReplaseA)
         {
             int tPos=0;
-            while(tPos=second.find("\\["))
+            while(true)
             {
+                tPos=second.find("\\[",tPos);
                 if(tPos<0) break;
                 second.replace(tPos,2,"[");
             }
@@ -170,10 +223,22 @@ RecursionArray fromArcan(const std::string &str)
         if(isReplaseB)
         {
             int tPos=0;
-            while(tPos=second.find("\\]"))
+            while(true)
             {
+                tPos=second.find("\\]",tPos);
                 if(tPos<0) break;
                 second.replace(tPos,2,"]");
+            }
+        }
+        if(isReplaceC)
+        {
+            int tPos=0;
+            while(true)
+            {
+                tPos=second.find("\\\\",tPos);
+                if(tPos<0) break;
+                second.replace(tPos,2,"\\");
+                tPos++;
             }
         }
         arr.add(first,second);

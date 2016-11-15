@@ -86,9 +86,8 @@ int main(int argc, char *argv[])
     test1.add("test","test2");
     test2.add("test2","test1");
     test1.add_child("test_child",test2);
-
     RecArrUtils::printTree(test1);
-    RecArrUtils::printTree(RecArrUtils::fromArcan("test1[test1\\[\\]_s]test2[test2_s]test3[test1[1]test2[2]]"));
+    RecArrUtils::printTree(RecArrUtils::fromArcan("test1[test1\\[\\]_\\\\s\\\\]test2[test2_s]test3[test1[1]test2[2]]3[\\[\\[\\\\]testX[]Zen[1]"));
     //for(auto &v=test1.begin();v!=test1.end();++v)
     cout << "Start server socket " << flush;
     try
