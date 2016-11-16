@@ -132,7 +132,31 @@ int findNoSlash(const std::string& str,const char ch, const unsigned int frist_p
     }
     return -1;
 }
-
+void SlashReplace(std::string* str, const unsigned int frist_pos)
+{
+    bool NoAdept=false;
+    unsigned int size=str->size();
+    for(unsigned int i=frist_pos;i<size;++i)
+    {
+        char thch=(*str)[i];
+        if(thch=='\\')
+        {
+            NoAdept=!NoAdept;
+            if(i+1<size)
+            {
+                char nextch=(*str)[i+1];
+                str->replace(i,2,1,nextch);
+            }
+        }
+        else
+        {
+            if(NoAdept)
+            {
+                NoAdept=false;
+            }
+        }
+    }
+}
 RecursionArray fromArcan(const std::string &str)
 {
     RecursionArray arr;
@@ -150,7 +174,7 @@ RecursionArray fromArcan(const std::string &str)
             Shet++;
         }
         else first=str.substr(i,first_pos-i);
-        int zPos=0;
+        /*int zPos=0;
         while(true)
         {
             zPos=first.find("\\]",zPos);
@@ -176,7 +200,8 @@ RecursionArray fromArcan(const std::string &str)
                 if(zPos<0) break;
                 first.replace(zPos,2,"\\");
             }
-        }
+        }*/
+        SlashReplace(&first,0);
         //int second_pos=str.find(']',first_pos);
         int second_pos=findNoSlash(str,']',first_pos,&isReplaseB,&isReplaceC);
         if(second_pos<0) break;
@@ -191,10 +216,11 @@ RecursionArray fromArcan(const std::string &str)
             if(recursion_pos<second_pos)
             {
 
-                int recursions=1;
+                int recursions=0;
                 while(recursion_pos<second_pos)
                 {
                     recursion_pos=findNoSlash(str,'[',recursion_pos+1,&isReplaseA,&isReplaceC);
+
                     recursions++;
                     if(recursion_pos<0) break;
                 }
@@ -204,8 +230,8 @@ RecursionArray fromArcan(const std::string &str)
                     last_second=findNoSlash(str,']',last_second+1,&isReplaseB,&isReplaceC);
                     if(last_second<0)
                     {
-                        cout << 1;
-                        return arr;
+                        cout << "WARNING: Arcan Decode failed: 1" << endl << flush;
+                        goto norecursion;
                     }
                     recursions--;
                 }
@@ -248,7 +274,7 @@ RecursionArray fromArcan(const std::string &str)
         }
         norecursion:
         std::string second=str.substr(first_pos+1,second_pos-first_pos-1);
-        if(isReplaseA)
+        /*if(isReplaseA)
         {
             int tPos=0;
             while(true)
@@ -277,7 +303,8 @@ RecursionArray fromArcan(const std::string &str)
                 if(tPos<0) break;
                 second.replace(tPos,2,"\\");
             }
-        }
+        }*/
+        SlashReplace(&second,0);
         arr.add(first,second);
         i=second_pos+1;
     }

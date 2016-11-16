@@ -32,7 +32,7 @@ bool initTestCmds()
     cmdecho->name="echo";
     cmdecho->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
-        client->do_write(RecArrUtils::printTreeEx(args));
+        client->do_write(RecArrUtils::toCfg(args));
     };
 
     Command* cmdtest=new Command();
