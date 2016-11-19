@@ -16,6 +16,8 @@
 #include <functional>
 #include <set>
 #include "recarray.h"
+#define MYSQLPP_MYSQL_HEADERS_BURIED;
+#include <mysql++/mysql++.h>
 bool initBaseCmds();
 bool initTestCmds();
 using namespace std;
@@ -89,7 +91,8 @@ public:
     std::queue<MyCommand> commandsarray;
     void launch(bool isJoin);
     static void run(mythread *me);
-    Database db;
+    //Database db;
+    mysqlpp::Connection db;
     ~mythread();
     bool isStart() const;
 };

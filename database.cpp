@@ -82,6 +82,22 @@ std::string MySqlResult::value(std::string pole)
     }
     return "";
 }
+RecursionArray MySqlResult::get_all()
+{
+    RecursionArray resultr;
+    MYSQL_FIELD* fd ;
+    MYSQL_ROW row ;
+    unsigned int num_fields;
+    num_fields = mysql_num_fields(result);
+    fd = mysql_fetch_fields(result);
+    for(unsigned int i = 0; i < num_fields; i++)
+    {
+        std::string first(fd[i].name,fd[i].name_length);
+        std::string second(row[i]);
+        resultr.push_back(RecursionArray::value_type(first, RecursionArray(second)));
+    }
+    return resultr;
+}
 void MySqlResult::seek(int i)
 {
     mysql_data_seek(result,i);

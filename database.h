@@ -2,6 +2,7 @@
 #define DATABASE_H
 #include "mysql/mysql.h"
 #include <string>
+#include <recarray.h>
 struct MySqlResult
 {
     MYSQL_RES *result;
@@ -9,6 +10,7 @@ struct MySqlResult
     MySqlResult(MYSQL_RES *res);
     void print();
     void seek(int i);
+    RecursionArray get_all();
     std::string value(std::string pole);
 };
 

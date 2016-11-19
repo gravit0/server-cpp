@@ -6,41 +6,70 @@
 #include "database.h"
 namespace AccountUtils
 {
-void auth(boostserver::client::ptr client, std::string login,std::string password,Database* db)
+bool auth(boostserver::client::ptr client, std::string login,std::string password,mysqlpp::Connection* db)
 {
+    mysqlpp::Query query = db->query( "SELECT * FROM users WHERE `login`='"+login+"' AND `pass` = MD5('"+password+"');" );
+    mysqlpp::StoreQueryResult res = query.store();
+    RecursionArray resultr;
+    unsigned int num_fields=res.num_fields();
+    if(num_fields>0)
+    {
+        for(unsigned int i = 0; i < num_fields; i++)
+        {
+            std::string first(res.field(i).name());
+            std::string second(res[0][i]);
+            resultr.push_back(RecursionArray::value_type(first, RecursionArray(second)));
+        }
+        RecArrUtils::printTree( resultr );
+        client->login=login;
+        client->isAuth=true;
+        client->permissionsLevel=1;
+        client->nickname=resultr.get<std::string>("nickname","");
+        return true;
+    }
+    else return false;
+    /*MySqlResult res = db->query("SELECT users.login,users.pass,users.nickname FROM users WHERE `login`='"+login+"' AND `pass` = MD5('"+password+"');");
+    RecursionArray result=res.get_all();
+    if(!result.empty())
+    {
+        client->login=login;
+        client->isAuth=true;
+        client->permissionsLevel=1;
+        client->nickname=result.get<std::string>("nickname","");
+        return true;
+    }
+    else return false;*/
 
 }
 }
 namespace RecArrUtils
 {
-void printTree(const RecursionArray& tree)
+void printTree(const RecursionArray& tree, const std::string& prefix)
 {
     BOOST_FOREACH(auto &v, tree)
     {
         boost::property_tree::ptree tmp = v.second.get_child("");
         if(tmp.empty())
-            std::cout << v.first << " " << v.second.get<std::string>("") << std::endl;
+            std::cout << prefix << v.first << ": \"" << v.second.get<std::string>("") << "\"\n" ;
         else
         {
-            std::cout << "Map " << v.first << std::endl;
-            printTree(tmp);
-            std::cout << "End" << std::endl;
+            std::cout<< prefix << v.first << "\n" << prefix << "{";
+            printTree(tmp,prefix+"\t");
+            std::cout<< "\n" << prefix << "}\n" ;
         }
     }
 }
-std::string printTreeEx(const RecursionArray& tree)
+std::string printTreeEx(const RecursionArray& tree, const std::string& prefix)
 {
     std::stringstream steam;
     BOOST_FOREACH(auto &v, tree)
     {
         boost::property_tree::ptree tmp = v.second.get_child("");
         if(tmp.empty())
-            steam << v.first << " " << v.second.get<std::string>("") << std::endl;
+            steam << "\n" << prefix << v.first << ": \"" << v.second.get<std::string>("") << "\"";
         else
         {
-            steam << "Map " << v.first << std::endl;
-            steam << printTreeEx(tmp);
-            steam << "End" << std::endl;
+            steam << "\n" << prefix << v.first << "\n" << prefix << "{" << printTreeEx(tmp,prefix+"\t") << "\n" << prefix << "}";
         }
     }
     return steam.str();
@@ -84,7 +113,7 @@ std::string toArcan(const RecursionArray& tree)
     }
     return steam.str();
 }
-std::string toCfg(const RecursionArray& tree, const std::string& prefix)
+/*std::string toCfg(const RecursionArray& tree, const std::string& prefix)
 {
     std::stringstream steam;
     BOOST_FOREACH(auto &v, tree)
@@ -98,7 +127,7 @@ std::string toCfg(const RecursionArray& tree, const std::string& prefix)
         }
     }
     return steam.str();
-}
+}*/
 int findNoSlash(const std::string& str,const char ch, const unsigned int frist_pos,bool* isReplace)
 {
     bool NoAdept=false;

@@ -109,7 +109,8 @@ void client::on_read(const boost::system::error_code & err, size_t bytes)
 void SrvControl::newThread()
 {
     mythread* then = new mythread();
-    then->db.connect(config_mysql_host,config_mysql_port,config_mysql_login,config_mysql_password,config_mysql_dbname);
+    //then->db.connect(config_mysql_host,config_mysql_port,config_mysql_login,config_mysql_password,config_mysql_dbname);
+    then->db.connect(config_mysql_dbname.c_str(),config_mysql_host.c_str(),config_mysql_login.c_str(),config_mysql_password.c_str(),config_mysql_port);
     threads.push_back(then);
     coutNewThreads++;
 }
@@ -118,7 +119,8 @@ void SrvControl::newThreads(int threadsd)
     for(int  i=0;i<threadsd;++i)
     {
         mythread* then = new mythread();
-        then->db.connect(config_mysql_host,config_mysql_port,config_mysql_login,config_mysql_password,config_mysql_dbname);
+        //then->db.connect(config_mysql_host,config_mysql_port,config_mysql_login,config_mysql_password,config_mysql_dbname);
+        then->db.connect(config_mysql_dbname.data(),config_mysql_host.data(),config_mysql_login.data(),config_mysql_password.data(),config_mysql_port);
         threads.push_back(then);
     }
     coutNewThreads+=threadsd;

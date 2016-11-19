@@ -1,4 +1,5 @@
 #include <boost-server.hpp>
+#include <accountutils.h>
 using boostserver::Command;
 using boostserver::service;
 using boostserver::client;
@@ -87,6 +88,23 @@ bool initBaseCmds()
         result.add("key","1");
         client->do_write(toArcan(result));
     };
+    Command* cmdauth=new Command();
+    cmdauth->name="auth";
+    cmdauth->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
+    {
+        if(AccountUtils::auth(client,args.get<std::string>("login",""),args.get<std::string>("pass",""),&(me->db)))
+        {
+            RecursionArray result;
+            result.add("key","1");
+            client->do_write(toArcan(result));
+        }
+        else
+        {
+            RecursionArray result;
+            result.add("key","0");
+            client->do_write(toArcan(result));
+        }
+    };
     Command* cmdplugins=new Command();
     cmdplugins->name="plugins";
     cmdplugins->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
@@ -104,6 +122,7 @@ bool initBaseCmds()
         client->do_write(toArcan(result));
     };
     service.cmdlist.push_back(cmdsu);
+    service.cmdlist.push_back(cmdauth);
     service.cmdlist.push_back(cmdclients);
     service.cmdlist.push_back(cmddisconnect);
     service.cmdlist.push_back(cmdgetevent);

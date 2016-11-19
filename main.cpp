@@ -38,7 +38,8 @@ int main(int argc, char *argv[])
 {
     service.thisstatus=SrvControl::status::preload;
     cout << "Load configs ";
-    config_mysql_login="localhost";
+    config_mysql_host="localhost";
+    config_mysql_login="chat";
     config_mysql_dbname="chat";
     config_mysql_password="FJS8CFhuumsERQbp!";
     config_mysql_port=3306;
