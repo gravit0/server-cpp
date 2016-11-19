@@ -110,11 +110,12 @@ public:
     list<mythread*> threads;
     set<client::ptr> clientlist;
     unsigned long long int coutAddThreads=0,coutNewThreads=0;
-    void newThread();
-    void newThreads(int threadsd);
+    void newThread(bool startdb);
+    void newThreads(int threadsd, bool startdb);
     void addThread(mythread* thend);
     void autoCommand(MyCommand cmd);
     bool addCommand(Command* cmd);
+    bool startdb(bool autofail=false);
     void cmdsclear();
     void closeclients();
     list<Command*> cmdlist;

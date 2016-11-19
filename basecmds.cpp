@@ -1,10 +1,12 @@
 #include <boost-server.hpp>
+#include "config.h"
 #include <accountutils.h>
 using boostserver::Command;
 using boostserver::service;
 using boostserver::client;
 using boostserver::mythread;
 using namespace RecArrUtils;
+
 #define InitCmd(cmdname,varname,funcd) Command* varname=new Command(); \
     varname->name=cmdname; \
     cmdtest->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client) funcd ; \
@@ -84,25 +86,31 @@ bool initBaseCmds()
     cmdseteventmode->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         client->isPassiveMode=!client->isPassiveMode;
-        RecursionArray result;
-        result.add("key","1");
-        client->do_write(toArcan(result));
+        ReturnCode(OK);
     };
     Command* cmdauth=new Command();
     cmdauth->name="auth";
     cmdauth->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
-        if(AccountUtils::auth(client,args.get<std::string>("login",""),args.get<std::string>("pass",""),&(me->db)))
+        std::string login=args.get<std::string>("login","");
+        for(int i=login.find("'");i>0 && i< login.size();i=login.find("'",i+1))
         {
-            RecursionArray result;
-            result.add("key","1");
-            client->do_write(toArcan(result));
+            login.replace(i,1,"\\'");
+            i++;
+        }
+        std::string passwd=args.get<std::string>("pass","");
+        for(int i=passwd.find("'");i>0 && i< passwd.size();i=passwd.find("'",i+1))
+        {
+            passwd.replace(i,1,"\\'");
+            i++;
+        }
+        if(AccountUtils::auth(client,login,passwd,&(me->db)))
+        {
+            ReturnCode(OK);
         }
         else
         {
-            RecursionArray result;
-            result.add("key","0");
-            client->do_write(toArcan(result));
+            ReturnCode(Fail);
         }
     };
     Command* cmdplugins=new Command();

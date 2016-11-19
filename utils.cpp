@@ -8,12 +8,13 @@ namespace AccountUtils
 {
 bool auth(boostserver::client::ptr client, std::string login,std::string password,mysqlpp::Connection* db)
 {
+    if(login.empty() || password.empty() || !db->connected()) return false;
     mysqlpp::Query query = db->query( "SELECT * FROM users WHERE `login`='"+login+"' AND `pass` = MD5('"+password+"');" );
     mysqlpp::StoreQueryResult res = query.store();
     RecursionArray resultr;
-    unsigned int num_fields=res.num_fields();
-    if(num_fields>0)
+    if(res.num_rows()>0)
     {
+        unsigned int num_fields=res.num_fields();
         for(unsigned int i = 0; i < num_fields; i++)
         {
             std::string first(res.field(i).name());
@@ -25,6 +26,7 @@ bool auth(boostserver::client::ptr client, std::string login,std::string passwor
         client->isAuth=true;
         client->permissionsLevel=1;
         client->nickname=resultr.get<std::string>("nickname","");
+        client->email=resultr.get<std::string>("email","");
         return true;
     }
     else return false;

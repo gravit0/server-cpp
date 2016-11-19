@@ -1,4 +1,5 @@
 #include <boost-server.hpp>
+#include "config.h"
 namespace boostserver
 {
 SrvControl service;
@@ -106,21 +107,32 @@ void client::on_read(const boost::system::error_code & err, size_t bytes)
         else stop();
     }
 }
-void SrvControl::newThread()
+void SrvControl::newThread(bool startdb)
 {
     mythread* then = new mythread();
     //then->db.connect(config_mysql_host,config_mysql_port,config_mysql_login,config_mysql_password,config_mysql_dbname);
-    then->db.connect(config_mysql_dbname.c_str(),config_mysql_host.c_str(),config_mysql_login.c_str(),config_mysql_password.c_str(),config_mysql_port);
+    if(startdb) then->db.connect(config_mysql_dbname.c_str(),config_mysql_host.c_str(),config_mysql_login.c_str(),config_mysql_password.c_str(),config_mysql_port);
     threads.push_back(then);
     coutNewThreads++;
 }
-void SrvControl::newThreads(int threadsd)
+bool SrvControl::startdb(bool autofail)
+{
+    for(auto i = threads.begin();i!=threads.end();++i)
+    {
+        mythread* th=(*i);
+        if(th->db.connected() && autofail) return false;
+        th->db.connect(config_mysql_dbname.c_str(),config_mysql_host.c_str(),config_mysql_login.c_str(),config_mysql_password.c_str(),config_mysql_port);
+    }
+    return true;
+}
+
+void SrvControl::newThreads(int threadsd,bool startdb)
 {
     for(int  i=0;i<threadsd;++i)
     {
         mythread* then = new mythread();
         //then->db.connect(config_mysql_host,config_mysql_port,config_mysql_login,config_mysql_password,config_mysql_dbname);
-        then->db.connect(config_mysql_dbname.data(),config_mysql_host.data(),config_mysql_login.data(),config_mysql_password.data(),config_mysql_port);
+        if(startdb) then->db.connect(config_mysql_dbname.c_str(),config_mysql_host.c_str(),config_mysql_login.c_str(),config_mysql_password.c_str(),config_mysql_port);
         threads.push_back(then);
     }
     coutNewThreads+=threadsd;
@@ -235,7 +247,7 @@ void ComandUse(mythread* me,MyCommand* thiscmd)
                 else
                 {
                     RecursionArray result;
-                    result.add("key","31");
+                    result.add("key",replys.NotPermissions);
                     thiscmd->clientptr->do_write(RecArrUtils::toArcan(result));
                 }
             }
@@ -256,7 +268,7 @@ void ComandUse(mythread* me,MyCommand* thiscmd)
     else
     {
         RecursionArray result;
-        result.add("key","33");
+        result.add("key",replys.NotCommand);
         thiscmd->clientptr->do_write(RecArrUtils::toArcan(result));
     }
 }

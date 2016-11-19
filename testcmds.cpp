@@ -1,4 +1,5 @@
 #include <boost-server.hpp>
+#include "config.h"
 using boostserver::Command;
 using boostserver::service;
 using boostserver::client;
@@ -15,18 +16,14 @@ bool initTestCmds()
     cmdtelnet->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         client->isTelnetMode=!client->isTelnetMode;
-        RecursionArray result;
-        result.add("key","1");
-        client->do_write(toArcan(result));
+        ReturnCode(OK);
     };
     Command* cmdtestevent=new Command();
     cmdtestevent->name="testevent";
     cmdtestevent->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         client->newEvent("test event");
-        RecursionArray result;
-        result.add("key","1");
-        client->do_write(toArcan(result));
+        ReturnCode(OK);
     };
     Command* cmdecho=new Command();
     cmdecho->name="echo";
@@ -39,9 +36,7 @@ bool initTestCmds()
     cmdtest->name="test";
     cmdtest->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
-        RecursionArray result;
-        result.add("key","1");
-        client->do_write(toArcan(result));
+        ReturnCode(OK);
     };
     service.cmdlist.push_back(cmdtest);
     service.cmdlist.push_back(cmdtelnet);

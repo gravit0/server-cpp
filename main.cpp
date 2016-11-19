@@ -4,7 +4,7 @@
 #include "database.h"
 //#include "recursionarray.h"
 #include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/ini_parser.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/foreach.hpp>
 #include <recarray.h>
 #include "config.h"
@@ -12,6 +12,8 @@ std::string  config_mysql_login,config_mysql_password,config_mysql_dbname,config
 int config_mysql_port;
 using boostserver::service;
 using boostserver::SrvControl;
+_replys replys;
+RecursionArray configarray;
 void localcmd_thread()
 {
     bool isStarted=true;
@@ -38,12 +40,58 @@ int main(int argc, char *argv[])
 {
     service.thisstatus=SrvControl::status::preload;
     cout << "Load configs ";
-    config_mysql_host="localhost";
-    config_mysql_login="chat";
-    config_mysql_dbname="chat";
-    config_mysql_password="FJS8CFhuumsERQbp!";
-    config_mysql_port=3306;
-    boostserver::endpoint= new boost::asio::ip::tcp::endpoint( boost::asio::ip::address::from_string(CONFIG_SERVER_HOST), CONFIG_SERVER_PORT);
+    std::fstream file;
+    file.open("config.json",ios_base::in | ios_base::out);
+    try
+    {
+        if(!file.is_open())
+        {
+            RecursionArray arr;
+            arr.add("mysql.active","true");
+            arr.add("mysql.user","root");
+            arr.add("mysql.host","localhost");
+            arr.add("mysql.password","");
+            arr.add("mysql.db","server");
+            arr.add("mysql.port","3306");
+            arr.add("server.host","127.0.0.1");
+            arr.add("server.port","8001");
+            arr.add("server.threads","2");
+            arr.add("server.baseCommands","true");
+            arr.add("server.testCommands","true");
+            arr.add("command.allowSU","true");
+            arr.add("command.allowAuth","true");
+            file.close();
+            boost::property_tree::json_parser::write_json("config.json",arr);
+
+            configarray=arr;
+        }
+        else
+        {
+            boost::property_tree::json_parser::read_json(file,configarray);
+            config_mysql_host=configarray.get<std::string>("server.host","127.0.0.1");
+            config_mysql_login=configarray.get<std::string>("server.login","root");
+            config_mysql_dbname=configarray.get<std::string>("server.dbname","server");
+            config_mysql_password=configarray.get<std::string>("server.password","");
+            config_mysql_port=configarray.get<int>("server.port",3306);
+            RecArrUtils::printTree(configarray);
+        }
+    }
+    catch(boost::property_tree::json_parser_error ex)
+    {
+        cout << "fail" << endl << ex.what() << endl;
+        file.close();
+        return 1;
+    }
+    file.close();
+//    config_mysql_host="localhost";
+//    config_mysql_login="chat";
+//    config_mysql_dbname="chat";
+//    config_mysql_password="FJS8CFhuumsERQbp!";
+//    config_mysql_port=3306;
+    boostserver::endpoint= new boost::asio::ip::tcp::endpoint(
+                boost::asio::ip::address::from_string(
+                    configarray.get<std::string>("server.host","127.0.0.1")),
+                configarray.get<int>("server.port",8001));
     cout << "OK" << endl;
     cout << "Load base command ";
     if(initBaseCmds())
@@ -57,16 +105,27 @@ int main(int argc, char *argv[])
         cout << "Fail" << endl;
     service.thisstatus=SrvControl::status::loading;
     cout << "Start threads ";
-    boostserver::service.newThreads(2);
+    boostserver::service.newThreads(2,false);
     cout << "OK" << endl;
     cout << "Start local thread ";
     std::thread localcmdthread(localcmd_thread);
     localcmdthread.detach();
     cout << "OK" << endl;
     cout << "Start database connection ";
+    try
+    {
+        if(boostserver::service.startdb(false))
+            cout << "OK" << endl;
+        else
+            cout << "fail" << endl;
+    }
+    catch(mysqlpp::Exception ex)
+    {
+        cout << "fail" << endl;
+        cout << ex.what() << endl;
+    }
     //Database db;
     //db.connect("localhost",3306,"chat","FJS8CFhuumsERQbp!","chat");
-    cout << "OK" << endl;
     //MySqlResult ind = db.query("SELECT * FROM rooms;");
     //ind.print();
 
