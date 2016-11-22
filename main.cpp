@@ -5,15 +5,21 @@
 //#include "recursionarray.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
 #include <recarray.h>
+#include <ctime>
 #include "config.h"
+#define LOCALTIME "[" << microsec_clock::local_time() << "] "
 std::string  config_mysql_login,config_mysql_password,config_mysql_dbname,config_mysql_host;
 int config_mysql_port;
 using boostserver::service;
 using boostserver::SrvControl;
+using boostserver::logs;
+using namespace boost::posix_time;
 _replys replys;
 RecursionArray configarray;
+boostserver::Logger boostserver::logs;
 void localcmd_thread()
 {
     bool isStarted=true;
@@ -35,11 +41,38 @@ void localcmd_thread()
         cout << flush;
     }
 }
+//class MakeLog {
+//public:
+//    MakeLog()
+//    {
+//    }
 
+//    template<class T>
+//    MakeLog& operator<< (const T& arg) {
+//        m_stream << arg;
+//        return *this;
+//    }
+//    operator std::string() const {
+//        return m_stream.str();
+//    }
+//    ~MakeLog()
+//    {
+
+//        logs.push_back(m_stream.str());
+//        if(logs.size()>300)
+//        {
+//            boostserver::service.savelog();
+//        }
+//        cout << m_stream.str();
+//    }
+
+//protected:
+//    std::stringstream m_stream;
+//};
 int main(int argc, char *argv[])
 {
     service.thisstatus=SrvControl::status::preload;
-    cout << "Load configs ";
+    cout << LOCALTIME << "Load configs ";
     std::fstream file;
     file.open("config.json",ios_base::in | ios_base::out);
     try
@@ -78,11 +111,13 @@ int main(int argc, char *argv[])
     }
     catch(boost::property_tree::json_parser_error ex)
     {
-        cout << "fail" << endl << ex.what() << endl;
+        cout << "fail\n" << ex.what() << "\n";
         file.close();
         return 1;
     }
     file.close();
+    logs.file.open("server.log",ios_base::app);
+    //ptime timer = microsec_clock::local_time();
 //    config_mysql_host="localhost";
 //    config_mysql_login="chat";
 //    config_mysql_dbname="chat";
@@ -92,37 +127,37 @@ int main(int argc, char *argv[])
                 boost::asio::ip::address::from_string(
                     configarray.get<std::string>("server.host","127.0.0.1")),
                 configarray.get<int>("server.port",8001));
-    cout << "OK" << endl;
-    cout << "Load base command ";
+    cout << "OK\n";
+    logs << "Load base command ";
     if(initBaseCmds())
-        cout << "OK" << endl;
+        logs << "OK\n";
     else
-        cout << "Fail" << endl;
-    cout << "Load test command ";
+        logs << "Fail\n";
+    logs << LOCALTIME << "Load test command ";
     if(initTestCmds())
-        cout << "OK" << endl;
+        logs << "OK\n";
     else
-        cout << "Fail" << endl;
+        logs << "Fail\n";
     service.thisstatus=SrvControl::status::loading;
-    cout << "Start threads ";
+    logs << LOCALTIME << "Start threads ";
     boostserver::service.newThreads(2,false);
-    cout << "OK" << endl;
-    cout << "Start local thread ";
+    logs << "OK\n";
+    logs << LOCALTIME << "Start local thread ";
     std::thread localcmdthread(localcmd_thread);
     localcmdthread.detach();
-    cout << "OK" << endl;
-    cout << "Start database connection ";
+    logs << "OK\n";
+    logs << LOCALTIME << "Start database connection ";
     try
     {
         if(boostserver::service.startdb(false))
-            cout << "OK" << endl;
+            logs << "OK\n";
         else
-            cout << "fail" << endl;
+            logs << "fail\n";
     }
     catch(mysqlpp::Exception ex)
     {
-        cout << "fail" << endl;
-        cout << ex.what() << endl;
+        logs << "fail\n";
+        logs << ex.what() << "\n";
     }
     //Database db;
     //db.connect("localhost",3306,"chat","FJS8CFhuumsERQbp!","chat");
@@ -149,7 +184,7 @@ int main(int argc, char *argv[])
     RecArrUtils::printTree(test1);
     RecArrUtils::printTree(RecArrUtils::fromArcan("test1[test1\\[\\]_\\\\s\\\\]test2[test2_s]test3[test1[1]test2[2]]3[\\[\\[\\\\]testX[]Zen[1]"));
     //for(auto &v=test1.begin();v!=test1.end();++v)
-    cout << "Start server socket " << flush;
+    logs << LOCALTIME << "Start server socket ";
     try
     {
         boostserver::acceptor=new boost::asio::ip::tcp::acceptor(boostserver::ioservice,*boostserver::endpoint);
@@ -162,9 +197,10 @@ int main(int argc, char *argv[])
         cout << a.what() << endl;
         return 1;
     }
-    cout << "OK" << endl;
+    logs << "OK\n";
     service.thisstatus=SrvControl::status::started;
-    cout << "Server started " << endl;
+    logs << LOCALTIME << "Server started\n ";
+    service.savelog();
     boostserver::ioservice.run();
     return 0;
 }

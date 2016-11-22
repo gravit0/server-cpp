@@ -30,6 +30,7 @@ bool initTestCmds()
     cmdecho->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         client->do_write(RecArrUtils::printTreeEx(args));
+        RecArrUtils::printTree(args);
     };
 
     Command* cmdtest=new Command();
@@ -38,7 +39,15 @@ bool initTestCmds()
     {
         ReturnCode(OK);
     };
+    Command* cmdtestr=new Command();
+    cmdtestr->name="testr";
+    cmdtestr->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
+    {
+        client->do_write("key@i["+RecArrUtils::IntToByte(-5)+"]\n");
+        client->stop();
+    };
     service.cmdlist.push_back(cmdtest);
+    service.cmdlist.push_back(cmdtestr);
     service.cmdlist.push_back(cmdtelnet);
     service.cmdlist.push_back(cmdecho);
     service.cmdlist.push_back(cmdtestevent);

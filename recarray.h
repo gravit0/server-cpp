@@ -11,5 +11,6 @@ RecursionArray fromArcan(const std::string& str);
 std::string toArcan(const RecursionArray& tree);
 //std::string toCfg(const RecursionArray& tree, const std::string& prefix="");
 std::string printTreeEx(const RecursionArray& tree, const std::string& prefix="");
+std::string IntToByte(int integer);
 }
 #endif // RECARRAY_H

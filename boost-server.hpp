@@ -15,36 +15,26 @@
 #include "database.h"
 #include <functional>
 #include <set>
+#include <logger.h>
 #include "recarray.h"
-#define MYSQLPP_MYSQL_HEADERS_BURIED;
+#define MYSQLPP_MYSQL_HEADERS_BURIED
 #include <mysql++/mysql++.h>
 bool initBaseCmds();
 bool initTestCmds();
 using namespace std;
 extern std::string  config_mysql_login,config_mysql_password,config_mysql_dbname,config_mysql_host;
 extern int config_mysql_port;
+
 namespace boostserver
 {
 namespace fs = boost::filesystem;
 namespace asio = boost::asio;
-class basic_client
-{
-public:
-    basic_client() {}
-    virtual void start() = 0;
-    virtual void stop() = 0;
-    virtual void do_write(const std::string & msg) = 0;
-    virtual void sync_write(const std::string & msg) = 0;
-    virtual bool started() = 0;
-    virtual ~basic_client() {}
-};
 struct event
 {
     std::string text;
     bool isReaded;
 };
-
-class client : public boost::enable_shared_from_this<client>, boost::noncopyable,basic_client
+class client : public boost::enable_shared_from_this<client>, boost::noncopyable
 {
     asio::ip::tcp::socket mysocket;
     enum { max_msg = 1024 };
@@ -62,7 +52,7 @@ public:
     static ptr new_();
     void start();
     void do_read();
-    void do_write(const std::string & msg);
+    bool do_write(const std::string & msg);
     void sync_write(const std::string & msg);
     size_t read_complete(const boost::system::error_code & err, size_t bytes);
     void on_read(const boost::system::error_code & err, size_t bytes);
@@ -96,7 +86,7 @@ public:
     ~mythread();
     bool isStart() const;
 };
-void ComandUse(mythread* me, MyCommand *thiscmd);
+void ComandUse(mythread* me, string thiscmd, client::ptr client);
 class Command{
 public:
     std::function<void(mythread* me,Command* cmd,const RecursionArray& args,client::ptr client)> func;
@@ -116,6 +106,7 @@ public:
     void autoCommand(MyCommand cmd);
     bool addCommand(Command* cmd);
     bool startdb(bool autofail=false);
+    void savelog();
     void cmdsclear();
     void closeclients();
     list<Command*> cmdlist;
@@ -132,7 +123,28 @@ public:
     status thisstatus;
 };
 extern SrvControl service;
+class Logger
+{
+public:
+    Logger();
+    std::stringstream stream;
+    std::fstream file;
+    operator std::string() const;
+    template<typename T>
+    Logger& operator<< (const T& arg)
+    {
+       stream << arg;
+       std::cout << arg;
+       if(stream.str().size()>1024)
+       {
+           boostserver::service.savelog();
+       }
+       return *this;
+   }
+};
+
 extern asio::ip::tcp::acceptor* acceptor;
+extern Logger logs;
 extern asio::ip::tcp::endpoint* endpoint;
 extern boost::asio::io_service ioservice;
 void handle_accept(client::ptr client, const boost::system::error_code & err);

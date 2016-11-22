@@ -46,6 +46,68 @@ bool auth(boostserver::client::ptr client, std::string login,std::string passwor
 }
 namespace RecArrUtils
 {
+std::string IntToByte(int integer)
+{
+   std::stringstream result;
+   char* zen=(char*)((void*)&integer);
+   if(integer==0)result <<(char)0;
+   if(integer>(256*256*256-1) || integer<0)result << (char)*(zen+3);
+   if(integer>(256*256-1) || integer<0)result <<(char)*(zen+2);
+   if(integer>255 || integer<0)result <<(char)*(zen+1);
+   result << *(zen);
+   std::string abc=result.str();
+   return abc;
+}
+//std::string IntToByte(int paramInt)
+//{
+//     std::string arrayOfByte;
+//     char id=0;
+//     for (int i = 0; i < 4; i++)
+//     {
+//         unsigned char z = (paramInt >> (i * 8));
+//         if(z!=0)
+//         {
+//             arrayOfByte[id] = z;
+//             id++;
+//         }
+//     }
+//     return arrayOfByte;
+//}
+int byteToInt(std::string buffer)
+{
+    if(buffer.size()>4 || buffer.size()==0)
+        return 0;
+    unsigned int resu=0;
+    if(buffer.size()==1)
+    {
+        resu=resu+((unsigned char)(buffer.at(0)));
+    }
+    else if(buffer.size()==2)
+    {
+        resu=resu+((unsigned char)(buffer.at(0)))*256;
+        resu=resu+((unsigned char)(buffer.at(1)));
+    }
+    else if(buffer.size()==3)
+    {
+        resu=resu+((unsigned char)(buffer.at(0)))*256*256;
+        resu=resu+((unsigned char)(buffer.at(1)))*256;
+        resu=resu+((unsigned char)(buffer.at(2)));
+    }
+    else if(buffer.size()==4)
+    {
+        resu=resu+((unsigned char)(buffer.at(0)))*256*256*256;
+        resu=resu+((unsigned char)(buffer.at(1)))*256*256;
+        resu=resu+((unsigned char)(buffer.at(2)))*256;
+        resu=resu+((unsigned char)(buffer.at(3)));
+    }
+//    if(buffer.size()<=4) resu=resu+((unsigned char)(buffer.at(0)));
+//    if(buffer.size()<=3) resu=resu+((unsigned char)(buffer.at(1)))*256;
+//    if(buffer.size()<=2) resu=resu+((unsigned char)(buffer.at(2)))*256*256;
+//    if(buffer.size()==1) resu=resu+((unsigned char)(buffer.at(3)))*256*256*256;
+
+    return *((int*)(&resu));
+}
+
 void printTree(const RecursionArray& tree, const std::string& prefix)
 {
     BOOST_FOREACH(auto &v, tree)
@@ -342,9 +404,20 @@ RecursionArray fromArcan(const std::string &str)
             //arr.add(first,true);
             arr.push_back(RecursionArray::value_type(first, RecursionArray("true")));
         }
+        else if(typed=='i')
+        {
+            //arr.add(first,true);
+            std::string second=str.substr(first_pos+1,second_pos-first_pos-1);
+            if(isReplaceB)
+                SlashReplace(&second,0);
+            //arr.add(first,second);
+            arr.push_back(RecursionArray::value_type(first, RecursionArray(std::to_string(byteToInt(second)))));
+
+        }
         else
         {
             std::string second=str.substr(first_pos+1,second_pos-first_pos-1);
+
         /*if(isReplaseA)
         {
             int tPos=0;

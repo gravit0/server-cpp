@@ -1,4 +1,5 @@
 #include <boost-server.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "config.h"
 namespace boostserver
 {
@@ -7,6 +8,7 @@ boost::asio::io_service ioservice;
 #define MEM_FN(x) boost::bind(&client::x, shared_from_this())
 #define MEM_FN1(x,y) boost::bind(&client::x, shared_from_this(),y)
 #define MEM_FN2(x,y,z) boost::bind(&client::x, shared_from_this(),y,z)
+#define LOCALTIME "[" << boost::posix_time::microsec_clock::local_time() << "] "
 asio::ip::tcp::endpoint* endpoint;
 asio::ip::tcp::acceptor* acceptor;
 client::client() : mysocket(ioservice), isStarted(false)
@@ -69,16 +71,27 @@ void client::do_read()
     async_read(mysocket, asio::buffer(read_buffer,read_buffer_size),
                MEM_FN2(read_complete,_1,_2), MEM_FN2(on_read,_1,_2));
 }
-void client::do_write(const std::string & msg)
+bool client::do_write(const std::string & msg)
 {
-    if ( !started() ) return;
+    if ( !started() ) return false;
+    if(msg.size()>write_buffer_size)
+    {
+        cout << "WARNING: write_buffer > msg.size()" << endl;
+        return false;
+    }
     std::copy(msg.begin(), msg.end(), write_buffer);
     mysocket.async_write_some( asio::buffer(write_buffer, msg.size()),
                             MEM_FN2(on_write,_1,_2));
+    return true;
 }
 void client::sync_write(const std::string & msg)
 {
     if ( !started() ) return;
+    if(msg.size()>write_buffer_size)
+    {
+        cout << "WARNING: write_buffer > msg.size()" << endl;
+        return;
+    }
     std::copy(msg.begin(), msg.end(), write_buffer);
     mysocket.write_some( asio::buffer(write_buffer, msg.size()));
 }
@@ -125,6 +138,12 @@ bool SrvControl::startdb(bool autofail)
     }
     return true;
 }
+void SrvControl::savelog()
+{
+    logs.file << logs.stream.str();
+    logs.file.flush();
+    logs.stream.clear();
+}
 
 void SrvControl::newThreads(int threadsd,bool startdb)
 {
@@ -157,7 +176,7 @@ void SrvControl::closeclients()
     {
         (*i)->stop();
     }
-    std::cout << "All client kicked" << std::endl << std::flush;
+    logs << LOCALTIME << "All client kicked\n";
 }
 
 void SrvControl::autoCommand(MyCommand cmd)
@@ -184,7 +203,7 @@ void client::on_write(const boost::system::error_code & err, size_t bytes)
 
 client::~client()
 {
-    cout << "Дестркутор!" << endl;
+    cout << LOCALTIME << "Дестркутор!\n";
     cout << flush;
     if(isStarted) service.clientlist.erase(it);
     delete[] read_buffer;
@@ -212,26 +231,26 @@ void mythread::run(mythread* me)
     while(me->commandsarray.size()>0)
     {
         MyCommand thiscmd=me->commandsarray.front();
-        ComandUse(me,&thiscmd);
+        ComandUse(me,thiscmd.cmd,thiscmd.clientptr);
         me->commandsarray.pop();
         if(thiscmd.clientptr->started())
             thiscmd.clientptr->do_read();
     }
 }
-void ComandUse(mythread* me,MyCommand* thiscmd)
+void ComandUse(mythread* me,std::string thiscmd,boostserver::client::ptr client)
 {
-    RecursionArray arr=RecArrUtils::fromArcan(thiscmd->cmd);
-    if(thiscmd->cmd.empty()) return;
+    RecursionArray arr=RecArrUtils::fromArcan(thiscmd);
+    if(thiscmd.empty()) return;
     std::string cmdname=arr.get<std::string>("type","");
     if(cmdname.empty())
     {
-        int cmdsize=thiscmd->cmd.size();
+        int cmdsize=thiscmd.size();
         if(cmdsize>2)
         {
-            if(thiscmd->cmd.at(cmdsize-1)=='\n' && thiscmd->cmd.at(cmdsize-2)=='\r')
-                cmdname=thiscmd->cmd.substr(0,cmdsize-2);
+            if(thiscmd.at(cmdsize-1)=='\n' && thiscmd.at(cmdsize-2)=='\r')
+                cmdname=thiscmd.substr(0,cmdsize-2);
             else
-                cmdname=thiscmd->cmd;
+                cmdname=thiscmd;
         }
         else return;
     }
@@ -239,41 +258,42 @@ void ComandUse(mythread* me,MyCommand* thiscmd)
     {
         if((*i)->name==cmdname)
         {
-            if(thiscmd->clientptr->permissionsLevel>=(*i)->minPermissions)
-                (*i)->func(me,(*i),arr,thiscmd->clientptr);
+            if(client->permissionsLevel>=(*i)->minPermissions)
+                (*i)->func(me,(*i),arr,client);
             else
             {
-                if(thiscmd->clientptr->isTelnetMode) thiscmd->clientptr->do_write("Not Permissions");
+                if(client->isTelnetMode) client->do_write("Not Permissions");
                 else
                 {
                     RecursionArray result;
                     result.add("key",replys.NotPermissions);
-                    thiscmd->clientptr->do_write(RecArrUtils::toArcan(result));
+                    client->do_write(RecArrUtils::toArcan(result));
                 }
             }
-            if(thiscmd->clientptr->isTelnetMode)
+            if(client->isTelnetMode)
             {
-                if(thiscmd->clientptr->permissionsLevel==5)thiscmd->clientptr->do_write("\n#");
-                else thiscmd->clientptr->do_write("\n$");
+                if(client->permissionsLevel==5)client->do_write("\n#");
+                else client->do_write("\n$");
             }
             return;
         }
     }
-    if(thiscmd->clientptr->isTelnetMode)
+    if(client->isTelnetMode)
     {
-        thiscmd->clientptr->do_write("Command not found");
-        if(thiscmd->clientptr->permissionsLevel==5)thiscmd->clientptr->do_write("\n#");
-        else thiscmd->clientptr->do_write("\n$");
+        client->do_write("Command not found");
+        if(client->permissionsLevel==5)client->do_write("\n#");
+        else client->do_write("\n$");
     }
     else
     {
         RecursionArray result;
         result.add("key",replys.NotCommand);
-        thiscmd->clientptr->do_write(RecArrUtils::toArcan(result));
+        client->do_write(RecArrUtils::toArcan(result));
     }
 }
 SrvControl::~SrvControl()
 {
+    savelog();
 }
 bool SrvControl::addCommand(Command* cmd)
 {
@@ -295,7 +315,8 @@ void handle_accept(client::ptr client, const boost::system::error_code & err)
         return;
     }
     client->start();
-    cout << "New Client!" << endl;
+    //cout << "New Client!" << endl;
+    logs << LOCALTIME << "New Connect: " << client->sock().remote_endpoint().address().to_string() << ":" << client->sock().remote_endpoint().port() << "\n";
     client::ptr new_client = client::new_();
     acceptor->async_accept(new_client->sock(), boost::bind(handle_accept,new_client,_1));
 }
