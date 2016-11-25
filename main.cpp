@@ -93,12 +93,12 @@ int main(int argc, char *argv[])
             arr.add("server.baseCommands","true");
             arr.add("server.testCommands","true");
             arr.add("server.debug.print","false");
-            arr.add("server.writelist.file","writelist.json");
-            arr.add("server.writelist.enable","false");
-            arr.add("server.writelist.type","file");
-            arr.add("server.backlist.file","backlist.json");
-            arr.add("server.backlist.enable","false");
-            arr.add("server.backlist.type","file");
+//            arr.add("server.writelist.file","writelist.json");
+//            arr.add("server.writelist.enable","false");
+//            arr.add("server.writelist.type","file");
+//            arr.add("server.backlist.file","backlist.json");
+//            arr.add("server.backlist.enable","false");
+//            arr.add("server.backlist.type","file");
             arr.add("server.logs.file","server.log");
             arr.add("server.logs.stdout","true");
             arr.add("server.http.enable","false");
