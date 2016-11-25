@@ -15,7 +15,6 @@
 #include "database.h"
 #include <functional>
 #include <set>
-#include <logger.h>
 #include "recarray.h"
 #define MYSQLPP_MYSQL_HEADERS_BURIED
 #include <mysql++/mysql++.h>
@@ -24,6 +23,7 @@ bool initTestCmds();
 using namespace std;
 extern std::string  config_mysql_login,config_mysql_password,config_mysql_dbname,config_mysql_host;
 extern int config_mysql_port;
+extern bool config_isdebug;
 
 namespace boostserver
 {
@@ -41,11 +41,11 @@ class client : public boost::enable_shared_from_this<client>, boost::noncopyable
     char* read_buffer;
     char* write_buffer;
     bool isStarted;
-    int read_buffer_size,write_buffer_size;
+    unsigned int read_buffer_size,write_buffer_size;
 
     client();
 public:
-    virtual ~client();
+    ~client();
     typedef boost::shared_ptr<client> ptr;
     typedef set<client::ptr>::iterator iterator;
     void stop();
@@ -110,6 +110,7 @@ public:
     void cmdsclear();
     void closeclients();
     list<Command*> cmdlist;
+    bool isCoutMode;
     ~SrvControl();
     enum class status
     {
@@ -129,12 +130,13 @@ public:
     Logger();
     std::stringstream stream;
     std::fstream file;
+    bool isPrintStdout;
     operator std::string() const;
     template<typename T>
     Logger& operator<< (const T& arg)
     {
        stream << arg;
-       std::cout << arg;
+       if(isPrintStdout) std::cout << arg;
        if(stream.str().size()>1024)
        {
            boostserver::service.savelog();

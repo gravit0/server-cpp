@@ -1,9 +1,8 @@
-#include "logger.h"
 #include "boost-server.hpp"
 using namespace boostserver;
 Logger::Logger()
 {
-
+    isPrintStdout=true;
 }
 //template<typename T>
 //Logger& Logger::operator<< (const T& arg) {

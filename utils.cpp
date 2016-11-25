@@ -107,6 +107,53 @@ int byteToInt(std::string buffer)
 
     return *((int*)(&resu));
 }
+long long int byteToLong(std::string buffer)
+{
+    unsigned int size = buffer.size();
+    if(size == 1){
+          return (long long int) (buffer[0] & 0xff);
+
+    }
+    if(size == 0){
+        return 0;
+
+    }
+    if(size == 2){
+        return (long long int) (buffer[0] & 0xff) << 8 | (long long int) (buffer[1] & 0xff);
+    }
+    if(size == 3){
+        return (buffer[0] & 0xff) << 16 | (long long int) (buffer[1] & 0xff) << 8 | (long long int) (buffer[2] & 0xff);
+    }
+    if(size == 4){
+        return (long long int) (buffer[0] & 0xff) << 24 | (long long int) (buffer[1] & 0xff) << 16
+             | (long long int) (buffer[2] & 0xff) << 8  | (long long int) (buffer[3] & 0xff);
+    }
+    if(size == 5){
+        return (long long int) (buffer[0] & 0xff) << 32
+             | (long long int) (buffer[1] & 0xff) << 24 | (long long int) (buffer[2] & 0xff) << 16
+             | (long long int) (buffer[3] & 0xff) << 8  | (long long int) (buffer[4] & 0xff);
+
+    }
+    if(size == 6){
+        return (long long int) (buffer[0] & 0xff) << 40 | (long long int) (buffer[1] & 0xff) << 32
+              | (long long int) (buffer[2] & 0xff) << 24 | (long long int) (buffer[3] & 0xff) << 16
+              | (long long int) (buffer[4] & 0xff) << 8 | (long long int) (buffer[5] & 0xff);
+    }
+    if(size == 7){
+        return (long long int) (buffer[0] & 0xff) << 48
+             | (long long int) (buffer[1] & 0xff) << 40 | (long long int) (buffer[2] & 0xff) << 32
+             | (long long int) (buffer[3] & 0xff) << 24 | (long long int) (buffer[4] & 0xff) << 16
+             | (long long int) (buffer[5] & 0xff) << 8 | (long long int) (buffer[6] & 0xff);
+    }
+    if(size == 8){
+        return (long long int) (buffer[0] & 0xff) << 56 | (long long int) (buffer[1] & 0xff) << 48
+             | (long long int) (buffer[2] & 0xff) << 40 | (long long int) (buffer[3] & 0xff) << 32
+             | (long long int) (buffer[4] & 0xff) << 24 | (long long int) (buffer[5] & 0xff) << 16
+             | (long long int) (buffer[6] & 0xff) << 8 | (long long int) (buffer[7] & 0xff);
+        }
+    return 0;
+
+}
 
 void printTree(const RecursionArray& tree, const std::string& prefix)
 {
@@ -282,7 +329,7 @@ RecursionArray fromArcan(const std::string &str)
 {
     RecursionArray arr;
     int i=0,Shet=0;
-    while(i<str.size())
+    while(i<(int)str.size())
     {
 
         bool isReplaceA=false,isReplaceB=false;
@@ -412,6 +459,16 @@ RecursionArray fromArcan(const std::string &str)
                 SlashReplace(&second,0);
             //arr.add(first,second);
             arr.push_back(RecursionArray::value_type(first, RecursionArray(std::to_string(byteToInt(second)))));
+
+        }
+        else if(typed=='l')
+        {
+            //arr.add(first,true);
+            std::string second=str.substr(first_pos+1,second_pos-first_pos-1);
+            if(isReplaceB)
+                SlashReplace(&second,0);
+            //arr.add(first,second);
+            arr.push_back(RecursionArray::value_type(first, RecursionArray(std::to_string(byteToLong(second)))));
 
         }
         else

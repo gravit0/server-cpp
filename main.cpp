@@ -80,6 +80,7 @@ int main(int argc, char *argv[])
         if(!file.is_open())
         {
             RecursionArray arr;
+            arr.add("version","1");
             arr.add("mysql.active","true");
             arr.add("mysql.user","root");
             arr.add("mysql.host","localhost");
@@ -91,8 +92,19 @@ int main(int argc, char *argv[])
             arr.add("server.threads","2");
             arr.add("server.baseCommands","true");
             arr.add("server.testCommands","true");
-            arr.add("command.allowSU","true");
-            arr.add("command.allowAuth","true");
+            arr.add("server.debug.print","false");
+            arr.add("server.writelist.file","writelist.json");
+            arr.add("server.writelist.enable","false");
+            arr.add("server.writelist.type","file");
+            arr.add("server.backlist.file","backlist.json");
+            arr.add("server.backlist.enable","false");
+            arr.add("server.backlist.type","file");
+            arr.add("server.logs.file","server.log");
+            arr.add("server.logs.stdout","true");
+            arr.add("server.http.enable","false");
+            arr.add("server.http.type","headers");
+            //arr.add("command.allowSU","true");
+            //arr.add("command.allowAuth","true");
             file.close();
             boost::property_tree::json_parser::write_json("config.json",arr);
 
@@ -116,7 +128,15 @@ int main(int argc, char *argv[])
         return 1;
     }
     file.close();
-    logs.file.open("server.log",ios_base::app);
+    logs.file.open(configarray.get<std::string>("server.logs.file","server.log"),ios_base::app);
+    if(configarray.get<std::string>("server.logs.stdout","true")=="true")
+    {
+        logs.isPrintStdout=true;
+    }
+    else
+    {
+        logs.isPrintStdout=false;
+    }
     //ptime timer = microsec_clock::local_time();
 //    config_mysql_host="localhost";
 //    config_mysql_login="chat";
@@ -128,19 +148,25 @@ int main(int argc, char *argv[])
                     configarray.get<std::string>("server.host","127.0.0.1")),
                 configarray.get<int>("server.port",8001));
     cout << "OK\n";
-    logs << "Load base command ";
-    if(initBaseCmds())
-        logs << "OK\n";
-    else
-        logs << "Fail\n";
-    logs << LOCALTIME << "Load test command ";
-    if(initTestCmds())
-        logs << "OK\n";
-    else
-        logs << "Fail\n";
+    if(configarray.get<std::string>("server.baseCommands","true")=="true")
+    {
+        logs << LOCALTIME << "Load base command ";
+        if(initBaseCmds())
+            logs << "OK\n";
+        else
+            logs << "Fail\n";
+    }
+    if(configarray.get<std::string>("server.testCommands","true")=="true")
+    {
+        logs << LOCALTIME << "Load test command ";
+        if(initTestCmds())
+            logs << "OK\n";
+        else
+            logs << "Fail\n";
+    }
     service.thisstatus=SrvControl::status::loading;
     logs << LOCALTIME << "Start threads ";
-    boostserver::service.newThreads(2,false);
+    boostserver::service.newThreads(configarray.get<int>("server.threads",2),false);
     logs << "OK\n";
     logs << LOCALTIME << "Start local thread ";
     std::thread localcmdthread(localcmd_thread);
@@ -176,15 +202,25 @@ int main(int argc, char *argv[])
     t6=t3["test2"].toMap();
     t7=t6["testZ"];
     cout << t4.toString() << t7.toString();*/
-    boost::property_tree::ptree test1,test2;
-    test1.add("test","test1");
-    test1.add("test","test2");
-    test2.add("test2","test1");
-    test1.add_child("test_child",test2);
-    RecArrUtils::printTree(test1);
-    RecArrUtils::printTree(RecArrUtils::fromArcan("test1[test1\\[\\]_\\\\s\\\\]test2[test2_s]test3[test1[1]test2[2]]3[\\[\\[\\\\]testX[]Zen[1]"));
+//    boost::property_tree::ptree test1,test2;
+//    test1.add("test","test1");
+//    test1.add("test","test2");
+//    test2.add("test2","test1");
+//    test1.add_child("test_child",test2);
+//    RecArrUtils::printTree(test1);
+//    RecArrUtils::printTree(RecArrUtils::fromArcan("test1[test1\\[\\]_\\\\s\\\\]test2[test2_s]test3[test1[1]test2[2]]3[\\[\\[\\\\]testX[]Zen[1]"));
     //for(auto &v=test1.begin();v!=test1.end();++v)
-    logs << LOCALTIME << "Start server socket ";
+//    logs << LOCALTIME << "Test RecursionArray1\n";
+//    RecursionArray test1;
+//    for(int i=0;i<1000000;++i)
+//    {
+//        test1.push_back(RecursionArray::value_type(std::to_string(i), RecursionArray("AAAAAAAAAAAAAAAA")));
+//    }
+//    logs << LOCALTIME << "Test RecursionArray2\n";
+//    std::string test2=RecArrUtils::toArcan(test1);
+//    logs << LOCALTIME << "Test RecursionArray3\n";
+//    RecArrUtils::fromArcan(test2);
+//    logs << LOCALTIME << "Start server socket ";
     try
     {
         boostserver::acceptor=new boost::asio::ip::tcp::acceptor(boostserver::ioservice,*boostserver::endpoint);

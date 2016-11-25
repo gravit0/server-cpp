@@ -107,10 +107,14 @@ void client::on_read(const boost::system::error_code & err, size_t bytes)
     if ( !err)
     {
         std::string msg(read_buffer, bytes);
-        MyCommand cmd;
-        cmd.clientptr=shared_from_this();
-        cmd.cmd=msg;
-        service.autoCommand(cmd);
+        if(!service.isCoutMode)
+        {
+            MyCommand cmd;
+            cmd.clientptr=shared_from_this();
+            cmd.cmd=msg;
+            service.autoCommand(cmd);
+        }
+        else cout << msg << endl << flush;
         //do_read();
     }
     else
