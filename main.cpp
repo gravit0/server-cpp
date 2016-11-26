@@ -1,7 +1,7 @@
 #include <boost-server.hpp>
 #include <boost/any.hpp>
 #include "boost-server.hpp"
-#include "database.h"
+//#include "database.h"
 //#include "recursionarray.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -106,8 +106,10 @@ int main(int argc, char *argv[])
             //arr.add("command.allowSU","true");
             //arr.add("command.allowAuth","true");
             file.close();
-            boost::property_tree::json_parser::write_json("config.json",arr);
-
+            std::fstream file2;
+            file2.open("config.json",ios_base::in | ios_base::out);
+            boost::property_tree::json_parser::write_json(file2,arr);
+            file2.close();
             configarray=arr;
         }
         else

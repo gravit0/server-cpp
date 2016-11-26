@@ -1,4 +1,5 @@
 #include <boost-server.hpp>
+#include "basefuncions.h"
 #include "config.h"
 using boostserver::Command;
 using boostserver::service;
@@ -43,7 +44,7 @@ bool initTestCmds()
     cmdtestr->name="testr";
     cmdtestr->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
-        client->do_write("key@i["+RecArrUtils::IntToByte(-5)+"]\n");
+        //client->do_write("key@i["+IntToByte((signed int)-5)+"]\n");
         client->stop();
     };
     service.cmdlist.push_back(cmdtest);

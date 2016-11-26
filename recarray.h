@@ -6,7 +6,7 @@ typedef boost::property_tree::ptree RecursionArray;
 namespace RecArrUtils
 {
 void printTree(const RecursionArray& tree, const std::string& prefix="");
-int findNoSlash(const std::string& str, const char ch, const unsigned int frist_pos, bool *isReplaceT, bool *isReplaceS);
+char SlashReplaceEx(std::string* str, const unsigned int frist_pos);
 RecursionArray fromArcan(const std::string& str);
 std::string toArcan(const RecursionArray& tree);
 //std::string toCfg(const RecursionArray& tree, const std::string& prefix="");
