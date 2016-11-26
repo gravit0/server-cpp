@@ -44,8 +44,9 @@ bool initTestCmds()
     cmdtestr->name="testr";
     cmdtestr->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
-        //client->do_write("key@i["+IntToByte((signed int)-5)+"]\n");
-        client->stop();
+        //client->do_write("key@i["+IntToByte(5)+"]\n");
+        ReturnCode(OK);
+        //client->stop();
     };
     service.cmdlist.push_back(cmdtest);
     service.cmdlist.push_back(cmdtestr);

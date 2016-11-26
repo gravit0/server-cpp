@@ -35,7 +35,7 @@ void localcmd_thread()
         {
             service.cmdsclear();
             service.closeclients();
-            delete boostserver::endpoint;
+            delete boostserver::thisConnect.endpoint;
             std::terminate();
         }
         cout << flush;
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 //    config_mysql_dbname="chat";
 //    config_mysql_password="FJS8CFhuumsERQbp!";
 //    config_mysql_port=3306;
-    boostserver::endpoint= new boost::asio::ip::tcp::endpoint(
+    boostserver::thisConnect.endpoint= new boost::asio::ip::tcp::endpoint(
                 boost::asio::ip::address::from_string(
                     configarray.get<std::string>("server.host","127.0.0.1")),
                 configarray.get<int>("server.port",8001));
@@ -219,12 +219,14 @@ int main(int argc, char *argv[])
 //    std::string test2=RecArrUtils::toArcan(test1);
 //    logs << LOCALTIME << "Test RecursionArray3\n";
 //    RecArrUtils::fromArcan(test2);
-//    logs << LOCALTIME << "Start server socket ";
+    logs << LOCALTIME << "Start server socket ";
     try
     {
-        boostserver::acceptor=new boost::asio::ip::tcp::acceptor(boostserver::ioservice,*boostserver::endpoint);
+        boostserver::thisConnect.acceptor=new boost::asio::ip::tcp::acceptor(boostserver::ioservice,*boostserver::thisConnect.endpoint);
         boostserver::client::ptr cliente = boostserver::client::new_();
-        boostserver::acceptor->async_accept(cliente->sock(), boost::bind(boostserver::handle_accept,cliente,_1));
+        boostserver::thisConnect.acceptor->async_accept(cliente->sock(), boost::bind(boostserver::handle_accept,cliente,boostserver::thisConnect.acceptor,_1));
+        logs << "OK\n";
+        logs << LOCALTIME << "Listen " << boostserver::thisConnect.endpoint->address().to_string() << " " << boostserver::thisConnect.endpoint->port() << "\n";
     }
     catch(boost::system::system_error a)
     {
@@ -232,7 +234,47 @@ int main(int argc, char *argv[])
         cout << a.what() << endl;
         return 1;
     }
-    logs << "OK\n";
+
+
+    RecursionArray connectsarr = configarray.get_child("connects",{});
+    RecArrUtils::printTree(connectsarr);
+    if(!connectsarr.empty())
+    {
+        BOOST_FOREACH(auto &v, connectsarr)
+        {
+            boost::property_tree::ptree tmp = v.second.get_child("");
+            if(!tmp.empty())
+            {
+                try
+                {
+                    boost::asio::ip::tcp::endpoint* endpo= new boost::asio::ip::tcp::endpoint(
+                                boost::asio::ip::address::from_string(
+                                    tmp.get<std::string>("host","127.0.0.1")),
+                                tmp.get<int>("port",8001));
+                    boostserver::ServerConnect* conn = new boostserver::ServerConnect();
+                    conn->endpoint=endpo;
+                    conn->acceptor=new boost::asio::ip::tcp::acceptor(boostserver::ioservice,*endpo);
+                    boostserver::client::ptr cliente = boostserver::client::new_();
+                    conn->acceptor->async_accept(cliente->sock(), boost::bind(boostserver::handle_accept,cliente,conn->acceptor,_1));
+                    service.connects.push_back(conn);
+                    logs << LOCALTIME << "Listen " << conn->endpoint->address().to_string() << " " << conn->endpoint->port() << "\n";
+                }
+                catch(boost::system::system_error a)
+                {
+                    cout << a.what() << endl;
+                    return 1;
+                }
+            }
+            else
+            {
+                logs << LOCALTIME << "Failed parse connect\n ";
+                service.savelog();
+                return 1;
+            }
+        }
+    }
+
+
     service.thisstatus=SrvControl::status::started;
     logs << LOCALTIME << "Server started\n ";
     service.savelog();

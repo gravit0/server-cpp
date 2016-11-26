@@ -18,7 +18,7 @@ bool initBaseCmds()
     cmdclients->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         RecursionArray result;
-        result.add("cout",std::to_string(service.clientlist.size()));
+        result.add("count",std::to_string(service.clientlist.size()));
         result.add("key","1");
         if(client->permissionsLevel>=3)
         {
@@ -36,7 +36,7 @@ bool initBaseCmds()
     cmdsu->name="su";
     cmdsu->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
-        if(client->sock().remote_endpoint().address()==boostserver::endpoint->address())
+        if(client->sock().remote_endpoint().address()==boostserver::thisConnect.endpoint->address())
         {
             client->permissionsLevel=5;
             RecursionArray result;
@@ -133,7 +133,7 @@ bool initBaseCmds()
     {
         RecursionArray result,result2;
         result.add("key","1");
-        result.add("cout",std::to_string(service.cmdlist.size()));
+        result.add("count",std::to_string(service.cmdlist.size()));
         int i=0;
         for(auto it = service.cmdlist.begin();it!=service.cmdlist.end();++it)
         {

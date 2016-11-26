@@ -68,6 +68,11 @@ public:
     iterator it;
     std::list<event> events;
 };
+struct ServerConnect
+{
+    asio::ip::tcp::acceptor* acceptor;
+    asio::ip::tcp::endpoint* endpoint;
+};
 
 struct MyCommand
 {
@@ -111,6 +116,7 @@ public:
     void cmdsclear();
     void closeclients();
     list<Command*> cmdlist;
+    list<ServerConnect*> connects;
     bool isCoutMode;
     ~SrvControl();
     enum class status
@@ -146,10 +152,9 @@ public:
    }
 };
 
-extern asio::ip::tcp::acceptor* acceptor;
+extern ServerConnect thisConnect;
 extern Logger logs;
-extern asio::ip::tcp::endpoint* endpoint;
 extern boost::asio::io_service ioservice;
-void handle_accept(client::ptr client, const boost::system::error_code & err);
+void handle_accept(client::ptr client, asio::ip::tcp::acceptor *accep, const boost::system::error_code & err);
 }
 #endif // BOOSTSERVER_HPP

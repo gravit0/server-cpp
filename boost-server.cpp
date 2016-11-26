@@ -9,8 +9,7 @@ boost::asio::io_service ioservice;
 #define MEM_FN1(x,y) boost::bind(&client::x, shared_from_this(),y)
 #define MEM_FN2(x,y,z) boost::bind(&client::x, shared_from_this(),y,z)
 #define LOCALTIME "[" << boost::posix_time::microsec_clock::local_time() << "] "
-asio::ip::tcp::endpoint* endpoint;
-asio::ip::tcp::acceptor* acceptor;
+ServerConnect thisConnect;
 client::client() : mysocket(ioservice), isStarted(false)
 {
     read_buffer = new char[max_msg];
@@ -159,7 +158,7 @@ client::~client()
 bool client::started() {return isStarted;}
 asio::ip::tcp::socket & client::sock() { return mysocket;}
 
-void handle_accept(client::ptr client, const boost::system::error_code & err)
+void handle_accept(client::ptr client, boost::asio::ip::tcp::acceptor* accep, const boost::system::error_code & err)
 {
     if(err)
     {
@@ -170,6 +169,6 @@ void handle_accept(client::ptr client, const boost::system::error_code & err)
     //cout << "New Client!" << endl;
     logs << LOCALTIME << "New Connect: " << client->sock().remote_endpoint().address().to_string() << ":" << client->sock().remote_endpoint().port() << "\n";
     client::ptr new_client = client::new_();
-    acceptor->async_accept(new_client->sock(), boost::bind(handle_accept,new_client,_1));
+    accep->async_accept(new_client->sock(), boost::bind(handle_accept,new_client,accep,_1));
 }
 }
