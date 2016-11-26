@@ -109,42 +109,44 @@ void mythread::run(mythread* me)
 void ComandUse(mythread* me,std::string thiscmd,boostserver::client::ptr client)
 {
     RecursionArray arr=RecArrUtils::fromArcan(thiscmd);
-    if(thiscmd.empty()) return;
-    std::string cmdname=arr.get<std::string>("type","");
-    if(cmdname.empty())
+    if(!thiscmd.empty())
     {
-        int cmdsize=thiscmd.size();
-        if(cmdsize>2)
+        std::string cmdname=arr.get<std::string>("type","");
+        if(cmdname.empty())
         {
-            if(thiscmd.at(cmdsize-1)=='\n' && thiscmd.at(cmdsize-2)=='\r')
-                cmdname=thiscmd.substr(0,cmdsize-2);
-            else
-                cmdname=thiscmd;
-        }
-        else return;
-    }
-    for(auto i = boostserver::service.cmdlist.begin();i!=boostserver::service.cmdlist.end();++i)
-    {
-        if((*i)->name==cmdname)
-        {
-            if(client->permissionsLevel>=(*i)->minPermissions)
-                (*i)->func(me,(*i),arr,client);
-            else
+            int cmdsize=thiscmd.size();
+            if(cmdsize>2)
             {
-                if(client->isTelnetMode) client->do_write("Not Permissions");
+                if(thiscmd.at(cmdsize-1)=='\n' && thiscmd.at(cmdsize-2)=='\r')
+                    cmdname=thiscmd.substr(0,cmdsize-2);
+                else
+                    cmdname=thiscmd;
+            }
+            else return;
+        }
+        for(auto i = boostserver::service.cmdlist.begin();i!=boostserver::service.cmdlist.end();++i)
+        {
+            if((*i)->name==cmdname)
+            {
+                if(client->permissionsLevel>=(*i)->minPermissions)
+                    (*i)->func(me,(*i),arr,client);
                 else
                 {
-                    RecursionArray result;
-                    result.add("key",replys.NotPermissions);
-                    client->do_write(RecArrUtils::toArcan(result));
+                    if(client->isTelnetMode) client->do_write("Not Permissions");
+                    else
+                    {
+                        RecursionArray result;
+                        result.add("key",replys.NotPermissions);
+                        client->do_write(RecArrUtils::toArcan(result));
+                    }
                 }
+                if(client->isTelnetMode)
+                {
+                    if(client->permissionsLevel==5)client->do_write("\n#");
+                    else client->do_write("\n$");
+                }
+                return;
             }
-            if(client->isTelnetMode)
-            {
-                if(client->permissionsLevel==5)client->do_write("\n#");
-                else client->do_write("\n$");
-            }
-            return;
         }
     }
     if(client->isTelnetMode)
