@@ -101,15 +101,12 @@ int main(int argc, char *argv[])
 //            arr.add("server.backlist.type","file");
             arr.add("server.logs.file","server.log");
             arr.add("server.logs.stdout","true");
-            arr.add("server.http.enable","false");
-            arr.add("server.http.type","headers");
-            //arr.add("command.allowSU","true");
-            //arr.add("command.allowAuth","true");
+//            arr.add("server.http.enable","false");
+//            arr.add("server.http.type","headers");
+//            arr.add("command.allowSU","true");
+//            arr.add("command.allowAuth","true");
             file.close();
-            std::fstream file2;
-            file2.open("config.json",ios_base::in | ios_base::out);
-            boost::property_tree::json_parser::write_json(file2,arr);
-            file2.close();
+            boost::property_tree::json_parser::write_json("config.json",arr);
             configarray=arr;
         }
         else

@@ -1,6 +1,7 @@
 #ifndef BOOSTSERVER_HPP
 #define BOOSTSERVER_HPP
 #include <iostream>
+#include <fstream>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/enable_shared_from_this.hpp>

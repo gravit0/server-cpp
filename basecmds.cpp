@@ -88,6 +88,20 @@ bool initBaseCmds()
         client->isPassiveMode=!client->isPassiveMode;
         ReturnCode(OK);
     };
+    Command* cmdversion=new Command();
+    cmdversion->name="version";
+    cmdversion->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
+    {
+        RecursionArray result;
+        result.add("server.version",SERVER_VERSION);
+        result.add("server.info",SERVER_TYPE);
+        if(client->permissionsLevel>=5)
+        {
+            result.add("server.threads",service.threads.size());
+            result.add("server.clients",service.clientlist.size());
+        }
+        client->do_write(RecArrUtils::toArcan(result));
+    };
     Command* cmdauth=new Command();
     cmdauth->name="auth";
     cmdauth->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
@@ -136,6 +150,7 @@ bool initBaseCmds()
     service.cmdlist.push_back(cmdgetevent);
     service.cmdlist.push_back(cmdseteventmode);
     service.cmdlist.push_back(cmdplugins);
+    service.cmdlist.push_back(cmdversion);
     return true;
 }
 #undef InitCmd

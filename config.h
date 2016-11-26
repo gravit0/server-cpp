@@ -2,9 +2,8 @@
 #define CONFIG_H
 #include <string>
 #include <recarray.h>
-//Базовые параметры
-#define CONFIG_SERVER_HOST "127.0.0.1"
-#define CONFIG_SERVER_PORT 8001
+#define SERVER_VERSION "0.0.1"
+#define SERVER_TYPE "cluServer(boost)"
 
 class _replys
 {
