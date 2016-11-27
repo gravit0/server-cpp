@@ -59,6 +59,7 @@ public:
     void on_read(const boost::system::error_code & err, size_t bytes);
     void on_write(const boost::system::error_code & err, size_t bytes);
     bool started();
+    asio::ip::tcp::endpoint endpoint() const;
     bool newEvent(std::string text);
     asio::ip::tcp::socket & sock();
     //Расширенные опции

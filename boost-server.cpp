@@ -58,6 +58,10 @@ bool client::newEvent(std::string text)
         return true;
     }
 }
+asio::ip::tcp::endpoint client::endpoint() const
+{
+    return mysocket.remote_endpoint();
+}
 
 void client::start()
 {
