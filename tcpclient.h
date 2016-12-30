@@ -6,18 +6,20 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <string>
 #include <iostream>
-class MemcachedClient: public boost::enable_shared_from_this<MemcachedClient>,boost::noncopyable
+#include <functional>
+class TcpClient: public boost::enable_shared_from_this<TcpClient>,boost::noncopyable
 {
-    typedef MemcachedClient self_type;
-    MemcachedClient(const std::string & message) : sock_(*ioservice), started_(true),message_(message) {}
+    typedef TcpClient self_type;
+    TcpClient() : sock_(*ioservice), started_(true) {}
     unsigned int read_buffer_size,write_buffer_size;
-    void start(boost::asio::ip::tcp::endpoint ep);
+    void connect(boost::asio::ip::tcp::endpoint ep);
 public:
     typedef boost::system::error_code error_code;
     boost::asio::io_service* ioservice;
-    typedef boost::shared_ptr<MemcachedClient> ptr;
+    typedef boost::shared_ptr<TcpClient> ptr;
     boost::asio::ip::tcp::endpoint endpoint;
-    static ptr start(boost::asio::ip::tcp::endpoint ep, const std::string & message);
+    std::function<void(std::string react)> onread;
+    static ptr start(boost::asio::ip::tcp::endpoint ep);
     void stop();
     bool started() { return started_; }
     void do_read();
