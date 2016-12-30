@@ -23,6 +23,7 @@ client::client() : mysocket(ioservice), isStarted(false)
 }
 Command::~Command()
 {
+    if(service.isDebug)
     std::cout << "Комманда " << name << " выгружена" << std::endl << std::flush;
 }
 void client::stop()
@@ -101,9 +102,18 @@ void client::sync_write(const std::string & msg)
 size_t client::read_complete(const boost::system::error_code & err, size_t bytes)
 {
     if ( err) return 0;
-    bool found = std::find(read_buffer, read_buffer + bytes, '\n') < read_buffer + bytes;
-
-    return found ? 0 : 1;
+    //bool found = std::find(read_buffer, read_buffer + bytes, '\n') < read_buffer + bytes;
+//        bool found=false;
+//        if(bytes==0) found=false;
+//        else if(read_buffer[bytes-1]=='\n') found=true;
+//        return found ? 0 : 1;
+        if(bytes==0) return 1;
+        if(read_buffer[bytes-1]=='\n') return 0;
+        //return found ? 0 : 1;
+//    if(bytes>0)
+//        return 0;
+//    else
+//        return 1;
 }
 Logger::Logger()
 {

@@ -35,8 +35,13 @@ void localcmd_thread()
         {
             service.cmdsclear();
             service.closeclients();
-            delete boostserver::thisConnect.endpoint;
-            std::terminate();
+            for(auto it=service.connects.begin();it!=service.connects.end();++it)
+            {
+                delete (*it);
+            }
+            service.connects.clear();
+            //std::terminate();
+            boostserver::ioservice.stop();
         }
         cout << flush;
     }
@@ -117,7 +122,7 @@ int main(int argc, char *argv[])
             config_mysql_dbname=configarray.get<std::string>("server.dbname","server");
             config_mysql_password=configarray.get<std::string>("server.password","");
             config_mysql_port=configarray.get<int>("server.port",3306);
-            RecArrUtils::printTree(configarray);
+            //RecArrUtils::printTree(configarray);
         }
     }
     catch(boost::property_tree::json_parser_error ex)
@@ -147,6 +152,10 @@ int main(int argc, char *argv[])
                     configarray.get<std::string>("server.host","127.0.0.1")),
                 configarray.get<int>("server.port",8001));
     cout << "OK\n";
+    if(configarray.get<std::string>("server.debug.print","false")=="true")
+    {
+        service.isDebug=true;
+    }
     if(configarray.get<std::string>("server.baseCommands","true")=="true")
     {
         logs << LOCALTIME << "Load base command ";
@@ -237,7 +246,7 @@ int main(int argc, char *argv[])
 
 
     RecursionArray connectsarr = configarray.get_child("connects",{});
-    RecArrUtils::printTree(connectsarr);
+    if(service.isDebug) RecArrUtils::printTree(connectsarr);
     if(!connectsarr.empty())
     {
         BOOST_FOREACH(auto &v, connectsarr)
@@ -276,8 +285,10 @@ int main(int argc, char *argv[])
 
 
     service.thisstatus=SrvControl::status::started;
-    logs << LOCALTIME << "Server started\n ";
+    logs << LOCALTIME << "Server started\n";
     service.savelog();
     boostserver::ioservice.run();
+    logs << LOCALTIME << "Server stoped\n";
+    service.savelog();
     return 0;
 }

@@ -9,11 +9,13 @@ SOURCES += main.cpp \
     basecmds.cpp \
     testcmds.cpp \
     basefuncions.cpp \
-    service.cpp
+    service.cpp \
+    memcachedclient.cpp
 
 HEADERS += \
     boost-server.hpp \
     accountutils.h \
     recarray.h \
     config.h \
-    basefuncions.h
+    basefuncions.h \
+    memcachedclient.h

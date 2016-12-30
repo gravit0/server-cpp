@@ -29,6 +29,17 @@ void SrvControl::savelog()
     logs.file.flush();
     logs.stream.clear();
 }
+ServerConnect::~ServerConnect()
+{
+    logs << LOCALTIME << "Stop Listening " << endpoint->address().to_string() << " " << endpoint->port() << "\n";
+    delete endpoint;
+    delete acceptor;
+}
+SrvControl::SrvControl()
+{
+    isCoutMode=false;
+    isDebug=false;
+}
 
 void SrvControl::newThreads(int threadsd,bool startdb)
 {

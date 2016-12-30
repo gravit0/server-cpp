@@ -73,6 +73,7 @@ struct ServerConnect
 {
     asio::ip::tcp::acceptor* acceptor;
     asio::ip::tcp::endpoint* endpoint;
+    ~ServerConnect();
 };
 
 struct MyCommand
@@ -104,6 +105,7 @@ public:
 class SrvControl
 {
 public:
+    SrvControl();
     list<mythread*> threads;
     set<client::ptr> clientlist;
     unsigned long long int coutAddThreads=0,coutNewThreads=0;
@@ -118,7 +120,7 @@ public:
     void closeclients();
     list<Command*> cmdlist;
     list<ServerConnect*> connects;
-    bool isCoutMode;
+    bool isCoutMode,isDebug;
     ~SrvControl();
     enum class status
     {
