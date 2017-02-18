@@ -1,8 +1,11 @@
 #include "boost-server.hpp"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "config.h"
-
+#ifndef NOLOGTIME
 #define LOCALTIME "[" << boost::posix_time::microsec_clock::local_time() << "] "
+#else
+#define LOCALTIME " "
+#endif
 namespace boostserver
 {
 void SrvControl::newThread(bool startdb)

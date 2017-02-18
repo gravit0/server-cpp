@@ -10,7 +10,11 @@
 #include <recarray.h>
 #include <ctime>
 #include "config.h"
+#ifndef NOLOGTIME
 #define LOCALTIME "[" << microsec_clock::local_time() << "] "
+#else
+#define LOCALTIME " "
+#endif
 std::string  config_mysql_login,config_mysql_password,config_mysql_dbname,config_mysql_host;
 int config_mysql_port;
 using boostserver::service;
@@ -85,7 +89,7 @@ int main(int argc, char *argv[])
         if(std::string(argv[1])=="--system") configetc=true;
         if(std::string(argv[1])=="--user") configetc=false;
     }
-    if(configetc) file.open("/etc/cluserver.cfg",ios_base::in | ios_base::out);
+    if(configetc) file.open("/etc/cluserver.cfg",ios_base::in);
     else file.open("config.json",ios_base::in | ios_base::out);
     try
     {
@@ -93,7 +97,7 @@ int main(int argc, char *argv[])
         {
             RecursionArray arr;
             arr.add("version","1");
-            arr.add("mysql.active","true");
+            arr.add("mysql.active","false");
             arr.add("mysql.user","root");
             arr.add("mysql.host","localhost");
             arr.add("mysql.password","");
@@ -140,11 +144,8 @@ int main(int argc, char *argv[])
         return 1;
     }
     file.close();
-    #if define MAIN_CONFIG_ETC
-    logs.file.open(configarray.get<std::string>("server.logs.file","/var/log/server.log"),ios_base::app);
-    #else
-    logs.file.open(configarray.get<std::string>("server.logs.file","server.log"),ios_base::app);
-    #endif
+    if(configetc) logs.file.open(configarray.get<std::string>("server.logs.file","/var/log/server.log"),ios_base::app);
+    else logs.file.open(configarray.get<std::string>("server.logs.file","server.log"),ios_base::app);
     if(configarray.get<std::string>("server.logs.stdout","true")=="true")
     {
         logs.isPrintStdout=true;
@@ -192,18 +193,21 @@ int main(int argc, char *argv[])
     std::thread localcmdthread(localcmd_thread);
     localcmdthread.detach();
     logs << "OK\n";
-    logs << LOCALTIME << "Start database connection ";
-    try
+    if(configarray.get<std::string>("mysql.active","false")=="true")
     {
-        if(boostserver::service.startdb(false))
-            logs << "OK\n";
-        else
+        logs << LOCALTIME << "Start database connection ";
+        try
+        {
+            if(boostserver::service.startdb(false))
+                logs << "OK\n";
+            else
+                logs << "fail\n";
+        }
+        catch(mysqlpp::Exception ex)
+        {
             logs << "fail\n";
-    }
-    catch(mysqlpp::Exception ex)
-    {
-        logs << "fail\n";
-        logs << ex.what() << "\n";
+            logs << ex.what() << "\n";
+        }
     }
     //Database db;
     //db.connect("localhost",3306,"chat","FJS8CFhuumsERQbp!","chat");

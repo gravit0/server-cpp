@@ -1,7 +1,7 @@
 {
     "version": "1",
     "mysql": {
-        "active": "true",
+        "active": "false",
         "user": "root",
         "host": "localhost",
         "password": "",

@@ -8,7 +8,11 @@ boost::asio::io_service ioservice;
 #define MEM_FN(x) boost::bind(&client::x, shared_from_this())
 #define MEM_FN1(x,y) boost::bind(&client::x, shared_from_this(),y)
 #define MEM_FN2(x,y,z) boost::bind(&client::x, shared_from_this(),y,z)
+#ifndef NOLOGTIME
 #define LOCALTIME "[" << boost::posix_time::microsec_clock::local_time() << "] "
+#else
+#define LOCALTIME " "
+#endif
 ServerConnect thisConnect;
 client::client() : mysocket(ioservice), isStarted(false)
 {
