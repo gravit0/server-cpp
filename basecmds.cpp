@@ -26,7 +26,16 @@ bool initBaseCmds()
             RecursionArray result2;
             for(auto it = service.clientlist.begin();it!=service.clientlist.end();++it)
             {
-                result2.add(std::to_string(i),(*it)->sock().remote_endpoint().address().to_string());
+                RecursionArray result3;
+                result3.add("ip",(*it)->endpoint().address().to_string());
+                result3.add("permLevel",(*it)->permissionsLevel);
+                if((*it)->isAuth)
+                {
+                    result3.add("auth",(*it)->permissionsLevel);
+                    result3.add("nickname",(*it)->nickname);
+                }
+                result2.add_child(std::to_string(i),result3);
+                ++i;
             }
             result.add_child("clients",result2);
         }
@@ -36,7 +45,7 @@ bool initBaseCmds()
     cmdsu->name="su";
     cmdsu->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
-        if(client->sock().remote_endpoint().address()==boostserver::thisConnect.endpoint->address())
+        if(client->endpoint().address()==boostserver::thisConnect.endpoint->address())
         {
             client->permissionsLevel=5;
             RecursionArray result;
@@ -135,7 +144,7 @@ bool initBaseCmds()
         result.add("key","1");
         result.add("count",std::to_string(service.cmdlist.size()));
         int i=0;
-        for(auto it = service.cmdlist.begin();it!=service.cmdlist.end();++it)
+        for(auto it = service.cmdlist.cbegin();it!=service.cmdlist.cend();++it)
         {
             result2.add(std::to_string(i),(*it)->name);
             ++i;

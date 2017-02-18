@@ -59,6 +59,7 @@ public:
     void on_read(const boost::system::error_code & err, size_t bytes);
     void on_write(const boost::system::error_code & err, size_t bytes);
     bool started();
+    asio::ip::tcp::endpoint endpoint() const;
     bool newEvent(std::string text);
     asio::ip::tcp::socket & sock();
     //Расширенные опции
@@ -72,6 +73,7 @@ struct ServerConnect
 {
     asio::ip::tcp::acceptor* acceptor;
     asio::ip::tcp::endpoint* endpoint;
+    ~ServerConnect();
 };
 
 struct MyCommand
@@ -103,6 +105,7 @@ public:
 class SrvControl
 {
 public:
+    SrvControl();
     list<mythread*> threads;
     set<client::ptr> clientlist;
     unsigned long long int coutAddThreads=0,coutNewThreads=0;
@@ -117,7 +120,7 @@ public:
     void closeclients();
     list<Command*> cmdlist;
     list<ServerConnect*> connects;
-    bool isCoutMode;
+    bool isCoutMode,isDebug;
     ~SrvControl();
     enum class status
     {
