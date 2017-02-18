@@ -1,0 +1,25 @@
+{
+    "version": "1",
+    "mysql": {
+        "active": "true",
+        "user": "root",
+        "host": "localhost",
+        "password": "",
+        "db": "server",
+        "port": "3306"
+    },
+    "server": {
+        "host": "127.0.0.1",
+        "port": "8001",
+        "threads": "2",
+        "baseCommands": "true",
+        "testCommands": "true",
+        "debug": {
+            "print": "false"
+        },
+        "logs": {
+            "file": "/var/log/server.log",
+            "stdout": "true"
+        }
+    }
+}

@@ -18,6 +18,8 @@ build() {
 package() {
   cd "${srcdir}/cluserver-cpp"
   #make install
+  mkdir ${pkgdir}/etc/
+  cp etcconfig.json ${pkgdir}/etc/cluserver.cfg
   mkdir ${pkgdir}/usr/
   mkdir ${pkgdir}/usr/bin/
   cp cluservercpp ${pkgdir}/usr/bin/
