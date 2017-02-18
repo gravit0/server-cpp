@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 2.8)
+
+project(cluservercpp)
+add_executable(${PROJECT_NAME} "main.cpp" "boost-server.cpp" "utils.cpp" "basecmds.cpp" "testcmds.cpp" "basefuncions.cpp" "service.cpp" "tcpclient.cpp" "memcached.cpp")
+include_directories(.)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+find_package(Boost COMPONENTS system filesystem REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+target_link_libraries(cluservercpp ${Boost_LIBRARIES})
+target_link_libraries(cluservercpp mysqlclient mysqlpp pthread )
