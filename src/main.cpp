@@ -79,7 +79,14 @@ int main(int argc, char *argv[])
     service.thisstatus=SrvControl::status::preload;
     cout << LOCALTIME << "Load configs ";
     std::fstream file;
-    file.open("config.json",ios_base::in | ios_base::out);
+    bool configetc=false;
+    if(argc>=2)
+    {
+        if(std::string(argv[1])=="--system") configetc=true;
+        if(std::string(argv[1])=="--user") configetc=false;
+    }
+    if(configetc) file.open("/etc/cluserver.cfg",ios_base::in | ios_base::out);
+    else file.open("config.json",ios_base::in | ios_base::out);
     try
     {
         if(!file.is_open())
@@ -111,7 +118,8 @@ int main(int argc, char *argv[])
 //            arr.add("command.allowSU","true");
 //            arr.add("command.allowAuth","true");
             file.close();
-            boost::property_tree::json_parser::write_json("config.json",arr);
+            if(configetc) boost::property_tree::json_parser::write_json("/etc/cluserver.cfg",arr);
+            else boost::property_tree::json_parser::write_json("config.json",arr);
             configarray=arr;
         }
         else
@@ -132,7 +140,11 @@ int main(int argc, char *argv[])
         return 1;
     }
     file.close();
+    #if define MAIN_CONFIG_ETC
+    logs.file.open(configarray.get<std::string>("server.logs.file","/var/log/server.log"),ios_base::app);
+    #else
     logs.file.open(configarray.get<std::string>("server.logs.file","server.log"),ios_base::app);
+    #endif
     if(configarray.get<std::string>("server.logs.stdout","true")=="true")
     {
         logs.isPrintStdout=true;
