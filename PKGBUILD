@@ -4,19 +4,19 @@ pkgrel=1
 pkgdesc="Base TCP Server"
 arch=('x86_64' 'i686' 'arm')
 license=('LGPL')
-depends=("boost-libs" "mysqlpp")
+depends=("boost-libs" "mysql++")
 options=('strip')
 source=("git+https://Gravit0@bitbucket.org/Gravit0/cluserver-cpp.git")
 sha512sums=('SKIP')
 
 build() {
-  cd "${srcdir}/cluservercpp"
+  cd "${srcdir}/cluserver-cpp"
   cmake .
   make
 }
 
 package() {
-  cd "${srcdir}/cluservercpp"
+  cd "${srcdir}/cluserver-cpp"
   #make install
   mkdir ${pkgdir}/usr/
   mkdir ${pkgdir}/usr/bin/
