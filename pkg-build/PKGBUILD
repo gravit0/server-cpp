@@ -5,6 +5,7 @@ pkgdesc="Base TCP Server"
 arch=('x86_64' 'i686' 'arm')
 license=('LGPL')
 depends=("boost-libs" "mysql++")
+optdepends=("boost" "cmake")
 options=('strip')
 source=("git+https://Gravit0@bitbucket.org/Gravit0/cluserver-cpp.git")
 sha512sums=('SKIP')
