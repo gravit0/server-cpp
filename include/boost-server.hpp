@@ -140,16 +140,19 @@ public:
     Logger();
     std::stringstream stream;
     std::fstream file;
-    bool isPrintStdout;
+    bool isPrintStdout,isPrintFileout;
     operator std::string() const;
     template<typename T>
     Logger& operator<< (const T& arg)
     {
-       stream << arg;
        if(isPrintStdout) std::cout << arg;
-       if(stream.str().size()>1024)
+       if(isPrintStdout)
        {
-           boostserver::service.savelog();
+            stream << arg;
+            if(stream.str().size()>1024)
+            {
+                boostserver::service.savelog();
+            }
        }
        return *this;
    }

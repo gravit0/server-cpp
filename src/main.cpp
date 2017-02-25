@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
         if(!file.is_open())
         {
             RecursionArray arr;
-            arr.add("version","1");
+            arr.add("version","3");
             arr.add("mysql.active","false");
             arr.add("mysql.user","root");
             arr.add("mysql.host","localhost");
@@ -109,6 +109,7 @@ int main(int argc, char *argv[])
             arr.add("server.baseCommands","true");
             arr.add("server.testCommands","true");
             arr.add("server.debug.print","false");
+            arr.add("reserve.active","false");
 //            arr.add("server.writelist.file","writelist.json");
 //            arr.add("server.writelist.enable","false");
 //            arr.add("server.writelist.type","file");
@@ -117,6 +118,7 @@ int main(int argc, char *argv[])
 //            arr.add("server.backlist.type","file");
             arr.add("server.logs.file","server.log");
             arr.add("server.logs.stdout","true");
+            arr.add("server.logs.fileout","true");
 //            arr.add("server.http.enable","false");
 //            arr.add("server.http.type","headers");
 //            arr.add("command.allowSU","true");
@@ -144,8 +146,17 @@ int main(int argc, char *argv[])
         return 1;
     }
     file.close();
-    if(configetc) logs.file.open(configarray.get<std::string>("server.logs.file","/var/log/server.log"),ios_base::app);
-    else logs.file.open(configarray.get<std::string>("server.logs.file","server.log"),ios_base::app);
+    if(configarray.get<std::string>("server.logs.fileout","true")=="true")
+    {
+        logs.isPrintFileout=true;
+        if(configetc) logs.file.open(configarray.get<std::string>("server.logs.file","/var/log/server.log"),ios_base::app);
+        else logs.file.open(configarray.get<std::string>("server.logs.file","server.log"),ios_base::app);
+    }
+    else
+    {
+        logs.isPrintFileout=false;
+    }
+
     if(configarray.get<std::string>("server.logs.stdout","true")=="true")
     {
         logs.isPrintStdout=true;
@@ -154,6 +165,7 @@ int main(int argc, char *argv[])
     {
         logs.isPrintStdout=false;
     }
+
     //ptime timer = microsec_clock::local_time();
 //    config_mysql_host="localhost";
 //    config_mysql_login="chat";

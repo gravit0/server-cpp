@@ -122,6 +122,7 @@ size_t client::read_complete(const boost::system::error_code & err, size_t bytes
 Logger::Logger()
 {
     isPrintStdout=true;
+    isPrintFileout=false;
 }
 //template<typename T>
 //Logger& Logger::operator<< (const T& arg) {
