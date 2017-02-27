@@ -4,7 +4,7 @@
 #include <recarray.h>
 #define SERVER_VERSION "0.0.1"
 #define SERVER_TYPE "cluServer(boost)"
-
+#define CONFIG_VERSION 3
 class _replys
 {
 public:

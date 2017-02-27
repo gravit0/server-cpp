@@ -78,25 +78,10 @@ void localcmd_thread()
 //protected:
 //    std::stringstream m_stream;
 //};
-int main(int argc, char *argv[])
+RecursionArray getStdConfig()
 {
-    service.thisstatus=SrvControl::status::preload;
-    cout << LOCALTIME << "Load configs ";
-    std::fstream file;
-    bool configetc=false;
-    if(argc>=2)
-    {
-        if(std::string(argv[1])=="--system") configetc=true;
-        if(std::string(argv[1])=="--user") configetc=false;
-    }
-    if(configetc) file.open("/etc/cluserver.cfg",ios_base::in);
-    else file.open("config.json",ios_base::in | ios_base::out);
-    try
-    {
-        if(!file.is_open())
-        {
             RecursionArray arr;
-            arr.add("version","3");
+            arr.add("version",CONFIG_VERSION);
             arr.add("mysql.active","false");
             arr.add("mysql.user","root");
             arr.add("mysql.host","localhost");
@@ -123,6 +108,26 @@ int main(int argc, char *argv[])
 //            arr.add("server.http.type","headers");
 //            arr.add("command.allowSU","true");
 //            arr.add("command.allowAuth","true");
+            return arr;
+}
+int main(int argc, char *argv[])
+{
+    service.thisstatus=SrvControl::status::preload;
+    cout << LOCALTIME << "Load configs ";
+    std::fstream file;
+    bool configetc=false;
+    if(argc>=2)
+    {
+        if(std::string(argv[1])=="--system") configetc=true;
+        if(std::string(argv[1])=="--user") configetc=false;
+    }
+    if(configetc) file.open("/etc/cluserver.cfg",ios_base::in);
+    else file.open("config.json",ios_base::in | ios_base::out);
+    try
+    {
+        if(!file.is_open())
+        {
+            RecursionArray arr = getStdConfig();
             file.close();
             if(configetc) boost::property_tree::json_parser::write_json("/etc/cluserver.cfg",arr);
             else boost::property_tree::json_parser::write_json("config.json",arr);
@@ -131,6 +136,8 @@ int main(int argc, char *argv[])
         else
         {
             boost::property_tree::json_parser::read_json(file,configarray);
+            int cfgver=configarray.get<int>("version",CONFIG_VERSION);
+            if(cfgver!=CONFIG_VERSION) std::cout << "Warn\nWARNING! Config version does not match the version of the program. Config version:" << cfgver << ". Standart config version:" <<CONFIG_VERSION;
             config_mysql_host=configarray.get<std::string>("server.host","127.0.0.1");
             config_mysql_login=configarray.get<std::string>("server.login","root");
             config_mysql_dbname=configarray.get<std::string>("server.dbname","server");

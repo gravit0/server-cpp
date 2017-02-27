@@ -1,5 +1,5 @@
 {
-    "version": "1",
+    "version": "3",
     "mysql": {
         "active": "false",
         "user": "root",
@@ -19,7 +19,8 @@
         },
         "logs": {
             "file": "/var/log/server.log",
-            "stdout": "true"
+            "stdout": "true",
+            "fileout": "true"
         }
     }
 }
