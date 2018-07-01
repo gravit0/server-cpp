@@ -40,11 +40,11 @@ class client : public boost::enable_shared_from_this<client>, boost::noncopyable
     enum { max_msg = 1024 };
     char* read_buffer;
     bool isStarted;
-    unsigned int read_buffer_size,write_buffer_size;
     client();
 public:
-        char* write_buffer;
-        unsigned int write_buffer_writted;
+    char* write_buffer;
+    unsigned int write_buffer_writted;
+    unsigned int read_buffer_size,write_buffer_size;
     ~client();
     typedef boost::shared_ptr<client> ptr;
     typedef set<client::ptr>::iterator iterator;
@@ -103,6 +103,8 @@ struct Context
     unsigned int flags;
     char* buffer;
     unsigned int* size;
+    unsigned int max_size;
+    unsigned long long int session;
 };
 };
 namespace Protocol

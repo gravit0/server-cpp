@@ -8,9 +8,11 @@ namespace Protocol
 struct message_result
 {
     unsigned char version;
-    unsigned char code;
+    unsigned char space;
     signed short flag; //Зарезервировано
     unsigned int size;
+    unsigned long long int session;
+    unsigned long long int code;
     enum results : unsigned char{
         OK = 0,
         ERROR_FILENOTFOUND = 1,
@@ -35,6 +37,7 @@ struct message_head
     unsigned int cmdflags;
     unsigned int size;
     unsigned long long int cmd;
+    unsigned long long int session;
 };
 };
 #endif

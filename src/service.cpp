@@ -145,14 +145,14 @@ int ComandUse(mythread* me,char* data, unsigned int size,boostserver::client::pt
         //logger->logg('W', "Command protocol error: unsupported command");
         return -1;
     }
-    Context context{client,me,head->cmdflags,client->write_buffer,&client->write_buffer_writted};
+    Context context{client,me,head->cmdflags,client->write_buffer,&client->write_buffer_writted,0,head->session};
     auto result = execcmd->func(context,cmd);
     if(result) {
         client->do_write();
     }
     else
     {
-        message_result rresult{0,*result,0,0};
+        message_result rresult{0,0,0,0,context.session /*session*/,*result};
         client->do_write({&rresult,sizeof(rresult)});
     }
     return 0;
