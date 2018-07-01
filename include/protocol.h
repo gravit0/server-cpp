@@ -30,10 +30,11 @@ typedef std::optional<message_result::results> CmdResult;
 struct message_head
 {
     unsigned char version;
-    unsigned char cmd;
+    unsigned char space; //RESERVED
     unsigned short flag;
     unsigned int cmdflags;
     unsigned int size;
+    unsigned long long int cmd;
 };
 };
 #endif
