@@ -3,21 +3,21 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 LIBS += -lboost_system -lboost_filesystem -lpthread -lmysqlclient -lmysqlpp
-SOURCES += main.cpp \
-    boost-server.cpp \
-    utils.cpp \
-    basecmds.cpp \
-    testcmds.cpp \
-    basefuncions.cpp \
-    service.cpp \
-    tcpclient.cpp \
-    memcached.cpp
-
+SOURCES += src/main.cpp \
+    src/boost-server.cpp \
+    src/utils.cpp \
+    src/basecmds.cpp \
+    src/testcmds.cpp \
+    src/basefuncions.cpp \
+    src/service.cpp \
+    src/tcpclient.cpp \
+    src/memcached.cpp
+INCLUDEPATH += "include"
 HEADERS += \
-    boost-server.hpp \
-    accountutils.h \
-    recarray.h \
-    config.h \
-    basefuncions.h \
-    tcpclient.h \
-    memcached.h
+    include/boost-server.hpp \
+    include/accountutils.h \
+    include/recarray.h \
+    include/config.h \
+    include/basefuncions.h \
+    include/tcpclient.h \
+    include/memcached.h

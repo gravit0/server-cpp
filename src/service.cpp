@@ -140,7 +140,7 @@ void ComandUse(mythread* me,std::string thiscmd,boostserver::client::ptr client)
         }
         for(auto i = boostserver::service.cmdlist.begin();i!=boostserver::service.cmdlist.end();++i)
         {
-            if((*i)->name==cmdname)
+            if((*i)->uuid==0) //TODO: FIX
             {
                 if(client->permissionsLevel>=(*i)->minPermissions)
                     (*i)->func(me,(*i),arr,client);

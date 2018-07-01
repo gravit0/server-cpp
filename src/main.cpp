@@ -112,7 +112,7 @@ RecursionArray getStdConfig()
 }
 int main(int argc, char *argv[])
 {
-    service.thisstatus=SrvControl::status::preload;
+    service.status=SrvControl::_status::preload;
     cout << LOCALTIME << "Load configs ";
     std::fstream file;
     bool configetc=false;
@@ -146,9 +146,9 @@ int main(int argc, char *argv[])
             //RecArrUtils::printTree(configarray);
         }
     }
-    catch(boost::property_tree::json_parser_error ex)
+    catch(boost::property_tree::json_parser_error* ex)
     {
-        cout << "fail\n" << ex.what() << "\n";
+        cout << "fail\n" << ex->what() << "\n";
         file.close();
         return 1;
     }
@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
         else
             logs << "Fail\n";
     }
-    service.thisstatus=SrvControl::status::loading;
+    service.status=SrvControl::_status::loading;
     logs << LOCALTIME << "Start threads ";
     boostserver::service.newThreads(configarray.get<int>("server.threads",2),false);
     logs << "OK\n";
@@ -222,10 +222,10 @@ int main(int argc, char *argv[])
             else
                 logs << "fail\n";
         }
-        catch(mysqlpp::Exception ex)
+        catch(mysqlpp::Exception* ex)
         {
             logs << "fail\n";
-            logs << ex.what() << "\n";
+            logs << ex->what() << "\n";
         }
     }
     //Database db;
@@ -272,10 +272,10 @@ int main(int argc, char *argv[])
         logs << "OK\n";
         logs << LOCALTIME << "Listen " << boostserver::thisConnect.endpoint->address().to_string() << " " << boostserver::thisConnect.endpoint->port() << "\n";
     }
-    catch(boost::system::system_error a)
+    catch(boost::system::system_error* a)
     {
         cout << "fail" << endl;
-        cout << a.what() << endl;
+        cout << a->what() << endl;
         return 1;
     }
 
@@ -303,9 +303,9 @@ int main(int argc, char *argv[])
                     service.connects.push_back(conn);
                     logs << LOCALTIME << "Listen " << conn->endpoint->address().to_string() << " " << conn->endpoint->port() << "\n";
                 }
-                catch(boost::system::system_error a)
+                catch(boost::system::system_error* a)
                 {
-                    cout << a.what() << endl;
+                    cout << a->what() << endl;
                     return 1;
                 }
             }
@@ -319,7 +319,7 @@ int main(int argc, char *argv[])
     }
 
 
-    service.thisstatus=SrvControl::status::started;
+    service.status=SrvControl::_status::started;
     logs << LOCALTIME << "Server started\n";
     service.savelog();
     boostserver::ioservice.run();

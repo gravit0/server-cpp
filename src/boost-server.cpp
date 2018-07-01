@@ -25,11 +25,6 @@ client::client() : mysocket(ioservice), isStarted(false)
     isTelnetMode=false;
     isPassiveMode=false;
 }
-Command::~Command()
-{
-    if(service.isDebug)
-    std::cout << "Комманда " << name << " выгружена" << std::endl << std::flush;
-}
 void client::stop()
 {
     if ( !isStarted) return;
@@ -113,6 +108,7 @@ size_t client::read_complete(const boost::system::error_code & err, size_t bytes
 //        return found ? 0 : 1;
         if(bytes==0) return 1;
         if(read_buffer[bytes-1]=='\n') return 0;
+        return 1;
         //return found ? 0 : 1;
 //    if(bytes>0)
 //        return 0;

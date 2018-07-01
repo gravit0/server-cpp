@@ -95,12 +95,10 @@ public:
     bool isStart() const;
 };
 void ComandUse(mythread* me, string thiscmd, client::ptr client);
-class Command{
-public:
-    std::function<void(mythread* me,Command* cmd,const RecursionArray& args,client::ptr client)> func;
-    std::string name;
+struct Command{
+    void (*func)(mythread* me,Command* cmd,const RecursionArray& args,client::ptr client);
+    unsigned long long int uuid;
     unsigned int minPermissions = 0;
-    ~Command();
 };
 class SrvControl
 {
@@ -122,7 +120,7 @@ public:
     list<ServerConnect*> connects;
     bool isCoutMode,isDebug;
     ~SrvControl();
-    enum class status
+    enum class _status
     {
         preload,
         loading,
@@ -131,7 +129,7 @@ public:
         stopping,
         close
     };
-    status thisstatus;
+    _status status;
 };
 extern SrvControl service;
 class Logger

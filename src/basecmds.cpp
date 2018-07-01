@@ -14,7 +14,7 @@ using namespace RecArrUtils;
 bool initBaseCmds()
 {
     Command* cmdclients=new Command();
-    cmdclients->name="clients";
+    //cmdclients->name="clients";
     cmdclients->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         RecursionArray result;
@@ -42,7 +42,7 @@ bool initBaseCmds()
         client->do_write(toArcan(result));
     };
     Command* cmdsu=new Command();
-    cmdsu->name="su";
+    //cmdsu->name="su";
     cmdsu->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         if(client->endpoint().address()==boostserver::thisConnect.endpoint->address())
@@ -55,13 +55,13 @@ bool initBaseCmds()
         }
     };
     Command* cmddisconnect=new Command();
-    cmddisconnect->name="disconnect";
+    //cmddisconnect->name="disconnect";
     cmddisconnect->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         client->stop();
     };
     Command* cmdgetevent=new Command();
-    cmdgetevent->name="getevent";
+    //cmdgetevent->name="getevent";
     cmdgetevent->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         RecursionArray result;
@@ -91,14 +91,14 @@ bool initBaseCmds()
         client->do_write(toArcan(result));
     };
     Command* cmdseteventmode=new Command();
-    cmdseteventmode->name="seteventmode";
+    //cmdseteventmode->name="seteventmode";
     cmdseteventmode->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         client->isPassiveMode=!client->isPassiveMode;
         ReturnCode(OK);
     };
     Command* cmdversion=new Command();
-    cmdversion->name="version";
+    //cmdversion->name="version";
     cmdversion->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         RecursionArray result;
@@ -112,7 +112,7 @@ bool initBaseCmds()
         client->do_write(RecArrUtils::toArcan(result));
     };
     Command* cmdauth=new Command();
-    cmdauth->name="auth";
+    //cmdauth->name="auth";
     cmdauth->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         std::string login=args.get<std::string>("login","");
@@ -137,7 +137,7 @@ bool initBaseCmds()
         }
     };
     Command* cmdplugins=new Command();
-    cmdplugins->name="plugins";
+    //cmdplugins->name="plugins";
     cmdplugins->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
     {
         RecursionArray result,result2;
@@ -146,7 +146,7 @@ bool initBaseCmds()
         int i=0;
         for(auto it = service.cmdlist.cbegin();it!=service.cmdlist.cend();++it)
         {
-            result2.add(std::to_string(i),(*it)->name);
+            result2.add(std::to_string(i),std::to_string((*it)->uuid));
             ++i;
         }
         result.add_child("plugins",result2);
