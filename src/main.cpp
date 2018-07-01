@@ -44,40 +44,11 @@ void localcmd_thread()
                 delete (*it);
             }
             service.connects.clear();
-            //std::terminate();
             boostserver::ioservice.stop();
         }
         cout << flush;
     }
 }
-//class MakeLog {
-//public:
-//    MakeLog()
-//    {
-//    }
-
-//    template<class T>
-//    MakeLog& operator<< (const T& arg) {
-//        m_stream << arg;
-//        return *this;
-//    }
-//    operator std::string() const {
-//        return m_stream.str();
-//    }
-//    ~MakeLog()
-//    {
-
-//        logs.push_back(m_stream.str());
-//        if(logs.size()>300)
-//        {
-//            boostserver::service.savelog();
-//        }
-//        cout << m_stream.str();
-//    }
-
-//protected:
-//    std::stringstream m_stream;
-//};
 RecursionArray getStdConfig()
 {
             RecursionArray arr;
@@ -172,13 +143,6 @@ int main(int argc, char *argv[])
     {
         logs.isPrintStdout=false;
     }
-
-    //ptime timer = microsec_clock::local_time();
-//    config_mysql_host="localhost";
-//    config_mysql_login="chat";
-//    config_mysql_dbname="chat";
-//    config_mysql_password="FJS8CFhuumsERQbp!";
-//    config_mysql_port=3306;
     boostserver::thisConnect.endpoint= new boost::asio::ip::tcp::endpoint(
                 boost::asio::ip::address::from_string(
                     configarray.get<std::string>("server.host","127.0.0.1")),
@@ -212,57 +176,6 @@ int main(int argc, char *argv[])
     std::thread localcmdthread(localcmd_thread);
     localcmdthread.detach();
     logs << "OK\n";
-    if(configarray.get<std::string>("mysql.active","false")=="true")
-    {
-        logs << LOCALTIME << "Start database connection ";
-        try
-        {
-            if(boostserver::service.startdb(false))
-                logs << "OK\n";
-            else
-                logs << "fail\n";
-        }
-        catch(mysqlpp::Exception* ex)
-        {
-            logs << "fail\n";
-            logs << ex->what() << "\n";
-        }
-    }
-    //Database db;
-    //db.connect("localhost",3306,"chat","FJS8CFhuumsERQbp!","chat");
-    //MySqlResult ind = db.query("SELECT * FROM rooms;");
-    //ind.print();
-
-    //cout << ind.value("id") << endl;
-    /*std::string testerd="mymy",saha="AAAAA!";
-    ASLib::AVariant t2,t4,t7; //saha = "AAAAA!"
-    t2=testerd; //saha = непонятно что
-    ASLib::RecursionArray t3,t5,t6;
-    t3["test1"]=t2;
-    t5["testZ"]=saha;
-    t3["test2"]=&t5;
-    t4=t3["test1"];
-    t6=t3["test2"].toMap();
-    t7=t6["testZ"];
-    cout << t4.toString() << t7.toString();*/
-//    boost::property_tree::ptree test1,test2;
-//    test1.add("test","test1");
-//    test1.add("test","test2");
-//    test2.add("test2","test1");
-//    test1.add_child("test_child",test2);
-//    RecArrUtils::printTree(test1);
-//    RecArrUtils::printTree(RecArrUtils::fromArcan("test1[test1\\[\\]_\\\\s\\\\]test2[test2_s]test3[test1[1]test2[2]]3[\\[\\[\\\\]testX[]Zen[1]"));
-    //for(auto &v=test1.begin();v!=test1.end();++v)
-//    logs << LOCALTIME << "Test RecursionArray1\n";
-//    RecursionArray test1;
-//    for(int i=0;i<1000000;++i)
-//    {
-//        test1.push_back(RecursionArray::value_type(std::to_string(i), RecursionArray("AAAAAAAAAAAAAAAA")));
-//    }
-//    logs << LOCALTIME << "Test RecursionArray2\n";
-//    std::string test2=RecArrUtils::toArcan(test1);
-//    logs << LOCALTIME << "Test RecursionArray3\n";
-//    RecArrUtils::fromArcan(test2);
     logs << LOCALTIME << "Start server socket ";
     try
     {

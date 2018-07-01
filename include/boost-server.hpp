@@ -17,8 +17,7 @@
 #include <functional>
 #include <set>
 #include "recarray.h"
-#define MYSQLPP_MYSQL_HEADERS_BURIED
-#include <mysql++/mysql++.h>
+#include "protocol.h"
 bool initBaseCmds();
 bool initTestCmds();
 using namespace std;
@@ -40,12 +39,12 @@ class client : public boost::enable_shared_from_this<client>, boost::noncopyable
     asio::ip::tcp::socket mysocket;
     enum { max_msg = 1024 };
     char* read_buffer;
-    char* write_buffer;
     bool isStarted;
     unsigned int read_buffer_size,write_buffer_size;
-
     client();
 public:
+        char* write_buffer;
+        unsigned int write_buffer_writted;
     ~client();
     typedef boost::shared_ptr<client> ptr;
     typedef set<client::ptr>::iterator iterator;
@@ -54,6 +53,8 @@ public:
     void start();
     void do_read();
     bool do_write(const std::string & msg);
+    bool do_write(Protocol::pair msg);
+    bool do_write();
     void sync_write(const std::string & msg);
     size_t read_complete(const boost::system::error_code & err, size_t bytes);
     void on_read(const boost::system::error_code & err, size_t bytes);
@@ -78,7 +79,8 @@ struct ServerConnect
 
 struct MyCommand
 {
-    std::string cmd;
+    char* data;
+    unsigned int size;
     client::ptr clientptr;
 };
 class mythread
@@ -90,13 +92,27 @@ public:
     void launch(bool isJoin);
     static void run(mythread *me);
     //Database db;
-    mysqlpp::Connection db;
     ~mythread();
     bool isStart() const;
 };
-void ComandUse(mythread* me, string thiscmd, client::ptr client);
+int ComandUse(mythread* me,char* data, unsigned int size,boostserver::client::ptr client);
+struct Context
+{
+    client::ptr ptr;
+    mythread* thread;
+    unsigned int flags;
+    char* buffer;
+    unsigned int* size;
+};
+};
+namespace Protocol
+{
+typedef CmdResult (*CallCell)(boostserver::Context, std::string);
+};
+namespace boostserver
+{
 struct Command{
-    void (*func)(mythread* me,Command* cmd,const RecursionArray& args,client::ptr client);
+    Protocol::CallCell func;
     unsigned long long int uuid;
     unsigned int minPermissions = 0;
 };

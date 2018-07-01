@@ -87,6 +87,30 @@ bool client::do_write(const std::string & msg)
                             MEM_FN2(on_write,_1,_2));
     return true;
 }
+bool client::do_write()
+{
+    if(write_buffer_writted>write_buffer_size)
+    {
+        cout << "WARNING: write_buffer > msg.size()" << endl;
+        return false;
+    }
+    mysocket.async_write_some( asio::buffer(write_buffer, write_buffer_writted),
+                            MEM_FN2(on_write,_1,_2));
+    return true;
+}
+bool client::do_write(Protocol::pair msg)
+{
+    if ( !started() ) return false;
+    if(msg.second>write_buffer_size)
+    {
+        cout << "WARNING: write_buffer > msg.size()" << endl;
+        return false;
+    }
+    memcpy(msg.first, write_buffer, msg.second);
+    mysocket.async_write_some( asio::buffer(write_buffer, msg.second),
+                            MEM_FN2(on_write,_1,_2));
+    return true;
+}
 void client::sync_write(const std::string & msg)
 {
     if ( !started() ) return;
@@ -138,15 +162,15 @@ void client::on_read(const boost::system::error_code & err, size_t bytes)
 {
     if ( !err)
     {
-        std::string msg(read_buffer, bytes);
         if(!service.isCoutMode)
         {
             MyCommand cmd;
             cmd.clientptr=shared_from_this();
-            cmd.cmd=msg;
+            cmd.data=read_buffer;
+            cmd.size=bytes;
             service.autoCommand(cmd);
         }
-        else cout << msg << endl << flush;
+        else cout << std::string(read_buffer,bytes) << endl << flush;
         //do_read();
     }
     else

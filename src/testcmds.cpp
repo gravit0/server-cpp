@@ -10,49 +10,18 @@ using namespace RecArrUtils;
     varname->name=cmdname; \
     varname->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client) funcd ; \
     service.cmdlist.push_back(varname)
-void cmd_telnet(boostserver::mythread* me,Command* cmd,const RecursionArray&  args,client::ptr client)
+Protocol::CmdResult cmd_telnet(boostserver::Context context, std::string)
 {
-    client->isTelnetMode=!client->isTelnetMode;
-    ReturnCode(OK);
+    context.ptr->isTelnetMode=!context.ptr->isTelnetMode;
+    return Protocol::message_result::OK;
 }
+
 Command testcmds[] = {
-    //{&cmd_telnet,0x5c04d270af35bf79,0}
+    {&cmd_telnet,0x5c04d270af35bf79,0}
 };
 bool initTestCmds()
 {
-    Command* cmdtestevent=new Command();
-    //cmdtestevent->name="testevent";
-    cmdtestevent->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
-    {
-        client->newEvent("test event");
-        ReturnCode(OK);
-    };
-    Command* cmdecho=new Command();
-    //cmdecho->name="echo";
-    cmdecho->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
-    {
-        client->do_write(RecArrUtils::printTreeEx(args));
-        RecArrUtils::printTree(args);
-    };
-
-    Command* cmdtest=new Command();
-    //cmdtest->name="test";
-    cmdtest->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
-    {
-        ReturnCode(OK);
-    };
-    Command* cmdtestr=new Command();
-    //cmdtestr->name="testr";
-    cmdtestr->func=[](boostserver::mythread* me,Command* cmd,const RecursionArray&  args,boostserver::client::ptr client)
-    {
-        //client->do_write("key@i["+IntToByte(5)+"]\n");
-        ReturnCode(OK);
-        //client->stop();
-    };
-    service.cmdlist.push_back(cmdtest);
-    service.cmdlist.push_back(cmdtestr);
-    service.cmdlist.push_back(cmdecho);
-    service.cmdlist.push_back(cmdtestevent);
+    for(auto &i : testcmds) service.cmdlist.push_back(&i);
     return true;
 }
 #undef InitCmd

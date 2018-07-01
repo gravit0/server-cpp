@@ -1,6 +1,7 @@
 #include "boost-server.hpp"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "config.h"
+#include "protocol.h"
 #ifndef NOLOGTIME
 #define LOCALTIME "[" << boost::posix_time::microsec_clock::local_time() << "] "
 #else
@@ -12,7 +13,6 @@ void SrvControl::newThread(bool startdb)
 {
     mythread* then = new mythread();
     //then->db.connect(config_mysql_host,config_mysql_port,config_mysql_login,config_mysql_password,config_mysql_dbname);
-    if(startdb) then->db.connect(config_mysql_dbname.c_str(),config_mysql_host.c_str(),config_mysql_login.c_str(),config_mysql_password.c_str(),config_mysql_port);
     threads.push_back(then);
     coutNewThreads++;
 }
@@ -21,8 +21,6 @@ bool SrvControl::startdb(bool autofail)
     for(auto i = threads.begin();i!=threads.end();++i)
     {
         mythread* th=(*i);
-        if(th->db.connected() && autofail) return false;
-        th->db.connect(config_mysql_dbname.c_str(),config_mysql_host.c_str(),config_mysql_login.c_str(),config_mysql_password.c_str(),config_mysql_port);
     }
     return true;
 }
@@ -50,8 +48,6 @@ void SrvControl::newThreads(int threadsd,bool startdb)
     {
         mythread* then = new mythread();
         //then->db.connect(config_mysql_host,config_mysql_port,config_mysql_login,config_mysql_password,config_mysql_dbname);
-        if(startdb) then->db.connect(config_mysql_dbname.c_str(),config_mysql_host.c_str(),config_mysql_login.c_str(),config_mysql_password.c_str(),config_mysql_port);
-        threads.push_back(then);
     }
     coutNewThreads+=threadsd;
 }
@@ -114,67 +110,52 @@ void mythread::run(mythread* me)
     while(me->commandsarray.size()>0)
     {
         MyCommand thiscmd=me->commandsarray.front();
-        ComandUse(me,thiscmd.cmd,thiscmd.clientptr);
+        ComandUse(me,thiscmd.data,thiscmd.size,thiscmd.clientptr);
         me->commandsarray.pop();
         if(thiscmd.clientptr->started())
             thiscmd.clientptr->do_read();
     }
 }
-void ComandUse(mythread* me,std::string thiscmd,boostserver::client::ptr client)
+using namespace Protocol;
+int ComandUse(mythread* me,char* data, unsigned int size,boostserver::client::ptr client)
 {
-    RecursionArray arr=RecArrUtils::fromArcan(thiscmd);
-    if(!thiscmd.empty())
+    if(size < sizeof(message_head))
     {
-        std::string cmdname=arr.get<std::string>("type","");
-        if(cmdname.empty())
-        {
-            int cmdsize=thiscmd.size();
-            if(cmdsize>2)
-            {
-                if(thiscmd.at(cmdsize-1)=='\n' && thiscmd.at(cmdsize-2)=='\r')
-                    cmdname=thiscmd.substr(0,cmdsize-2);
-                else
-                    cmdname=thiscmd;
-            }
-            else return;
-        }
-        for(auto i = boostserver::service.cmdlist.begin();i!=boostserver::service.cmdlist.end();++i)
-        {
-            if((*i)->uuid==0) //TODO: FIX
-            {
-                if(client->permissionsLevel>=(*i)->minPermissions)
-                    (*i)->func(me,(*i),arr,client);
-                else
-                {
-                    if(client->isTelnetMode) client->do_write("Not Permissions");
-                    else
-                    {
-                        RecursionArray result;
-                        result.add("key",replys.NotPermissions);
-                        client->do_write(RecArrUtils::toArcan(result));
-                    }
-                }
-                if(client->isTelnetMode)
-                {
-                    if(client->permissionsLevel==5)client->do_write("\n#");
-                    else client->do_write("\n$");
-                }
-                return;
-            }
-        }
+        //logger->logg('W', "Command protocol error: 1");
+        return -1;
     }
-    if(client->isTelnetMode)
+    message_head* head = (message_head*)data;
+    if(size != sizeof(message_head) + head->size)
     {
-        client->do_write("Command not found");
-        if(client->permissionsLevel==5)client->do_write("\n#");
-        else client->do_write("\n$");
+        //logger->logg('W', "Command protocol error: 2");
+        return -1;
+    }
+    std::string cmd(data + sizeof(message_head), head->size);
+    //printf("Client sent: %s\n", rsock->buf);
+    //lpfunc(head,cmd, rsock);
+    Command* execcmd = nullptr;
+    for(auto &i : service.cmdlist)
+        if(i->uuid == head->cmd)
+        {
+            execcmd = i;
+            break;
+        }
+    if(execcmd == nullptr)
+    {
+        //logger->logg('W', "Command protocol error: unsupported command");
+        return -1;
+    }
+    Context context{client,me,head->cmdflags,client->write_buffer,&client->write_buffer_writted};
+    auto result = execcmd->func(context,cmd);
+    if(result) {
+        client->do_write();
     }
     else
     {
-        RecursionArray result;
-        result.add("key",replys.NotCommand);
-        client->do_write(RecArrUtils::toArcan(result));
+        message_result rresult{0,*result,0,0};
+        client->do_write({&rresult,sizeof(rresult)});
     }
+    return 0;
 }
 SrvControl::~SrvControl()
 {

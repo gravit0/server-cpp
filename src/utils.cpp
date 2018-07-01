@@ -1,50 +1,10 @@
-#include "accountutils.h"
 #include "recarray.h"
 #include <boost/foreach.hpp>
 #include <iostream>
 #include <sstream>
 //#include "database.h"
 #include "basefuncions.h"
-namespace AccountUtils
-{
-bool auth(boostserver::client::ptr client, std::string login,std::string password,mysqlpp::Connection* db)
-{
-    if(login.empty() || password.empty() || !db->connected()) return false;
-    mysqlpp::Query query = db->query( "SELECT * FROM users WHERE `login`='"+login+"' AND `pass` = MD5('"+password+"');" );
-    mysqlpp::StoreQueryResult res = query.store();
-    RecursionArray resultr;
-    if(res.num_rows()>0)
-    {
-        unsigned int num_fields=res.num_fields();
-        for(unsigned int i = 0; i < num_fields; i++)
-        {
-            std::string first(res.field(i).name());
-            std::string second(res[0][i]);
-            resultr.push_back(RecursionArray::value_type(first, RecursionArray(second)));
-        }
-        RecArrUtils::printTree( resultr );
-        client->login=login;
-        client->isAuth=true;
-        client->permissionsLevel=1;
-        client->nickname=resultr.get<std::string>("nickname","");
-        client->email=resultr.get<std::string>("email","");
-        return true;
-    }
-    else return false;
-    /*MySqlResult res = db->query("SELECT users.login,users.pass,users.nickname FROM users WHERE `login`='"+login+"' AND `pass` = MD5('"+password+"');");
-    RecursionArray result=res.get_all();
-    if(!result.empty())
-    {
-        client->login=login;
-        client->isAuth=true;
-        client->permissionsLevel=1;
-        client->nickname=result.get<std::string>("nickname","");
-        return true;
-    }
-    else return false;*/
-
-}
-}
+using namespace std;
 namespace RecArrUtils
 {
 
