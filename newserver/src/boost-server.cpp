@@ -131,7 +131,7 @@ size_t client::read_complete(const boost::system::error_code & err, size_t bytes
 //        else if(read_buffer[bytes-1]=='\n') found=true;
 //        return found ? 0 : 1;
         if(bytes==0) return 1;
-        if(read_buffer[bytes-1]=='\n') return 0;
+        if(bytes == sizeof(Protocol::message_head) && ((Protocol::message_head*)read_buffer)-> size == 0) return 0;
         return 1;
         //return found ? 0 : 1;
 //    if(bytes>0)

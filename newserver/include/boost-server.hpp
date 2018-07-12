@@ -122,7 +122,7 @@ class SrvControl
 {
 public:
     SrvControl();
-    list<mythread*> threads;
+    vector<mythread*> threads;
     set<client::ptr> clientlist;
     unsigned long long int coutAddThreads=0,coutNewThreads=0;
     void newThread(bool startdb);
@@ -134,8 +134,8 @@ public:
     void savelog();
     void cmdsclear();
     void closeclients();
-    list<Command*> cmdlist;
-    list<ServerConnect*> connects;
+    vector<Command*> cmdlist;
+    vector<ServerConnect*> connects;
     bool isCoutMode,isDebug;
     ~SrvControl();
     enum class _status

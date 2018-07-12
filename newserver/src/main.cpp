@@ -10,11 +10,7 @@
 #include <recarray.h>
 #include <ctime>
 #include "config.h"
-#include <memcached.h>
-<<<<<<< HEAD:src/main.cpp
 #ifndef NOLOGTIME
-=======
->>>>>>> 77b37f18bebf3cf20b2b7f59ac1d6c14ca79148b:main.cpp
 #define LOCALTIME "[" << microsec_clock::local_time() << "] "
 #else
 #define LOCALTIME " "
@@ -48,43 +44,46 @@ void localcmd_thread()
                 delete (*it);
             }
             service.connects.clear();
-            //std::terminate();
             boostserver::ioservice.stop();
         }
         cout << flush;
     }
 }
-//class MakeLog {
-//public:
-//    MakeLog()
-//    {
-//    }
-
-//    template<class T>
-//    MakeLog& operator<< (const T& arg) {
-//        m_stream << arg;
-//        return *this;
-//    }
-//    operator std::string() const {
-//        return m_stream.str();
-//    }
-//    ~MakeLog()
-//    {
-
-//        logs.push_back(m_stream.str());
-//        if(logs.size()>300)
-//        {
-//            boostserver::service.savelog();
-//        }
-//        cout << m_stream.str();
-//    }
-
-//protected:
-//    std::stringstream m_stream;
-//};
+RecursionArray getStdConfig()
+{
+            RecursionArray arr;
+            arr.add("version",CONFIG_VERSION);
+            arr.add("mysql.active","false");
+            arr.add("mysql.user","root");
+            arr.add("mysql.host","localhost");
+            arr.add("mysql.password","");
+            arr.add("mysql.db","server");
+            arr.add("mysql.port","3306");
+            arr.add("server.host","127.0.0.1");
+            arr.add("server.port","8001");
+            arr.add("server.threads","2");
+            arr.add("server.baseCommands","true");
+            arr.add("server.testCommands","true");
+            arr.add("server.debug.print","false");
+            arr.add("reserve.active","false");
+//            arr.add("server.writelist.file","writelist.json");
+//            arr.add("server.writelist.enable","false");
+//            arr.add("server.writelist.type","file");
+//            arr.add("server.backlist.file","backlist.json");
+//            arr.add("server.backlist.enable","false");
+//            arr.add("server.backlist.type","file");
+            arr.add("server.logs.file","server.log");
+            arr.add("server.logs.stdout","true");
+            arr.add("server.logs.fileout","true");
+//            arr.add("server.http.enable","false");
+//            arr.add("server.http.type","headers");
+//            arr.add("command.allowSU","true");
+//            arr.add("command.allowAuth","true");
+            return arr;
+}
 int main(int argc, char *argv[])
 {
-    service.thisstatus=SrvControl::status::preload;
+    service.status=SrvControl::_status::preload;
     cout << LOCALTIME << "Load configs ";
     std::fstream file;
     bool configetc=false;
@@ -99,32 +98,7 @@ int main(int argc, char *argv[])
     {
         if(!file.is_open())
         {
-            RecursionArray arr;
-            arr.add("version","1");
-            arr.add("mysql.active","false");
-            arr.add("mysql.user","root");
-            arr.add("mysql.host","localhost");
-            arr.add("mysql.password","");
-            arr.add("mysql.db","server");
-            arr.add("mysql.port","3306");
-            arr.add("server.host","127.0.0.1");
-            arr.add("server.port","8001");
-            arr.add("server.threads","2");
-            arr.add("server.baseCommands","true");
-            arr.add("server.testCommands","true");
-            arr.add("server.debug.print","false");
-//            arr.add("server.writelist.file","writelist.json");
-//            arr.add("server.writelist.enable","false");
-//            arr.add("server.writelist.type","file");
-//            arr.add("server.backlist.file","backlist.json");
-//            arr.add("server.backlist.enable","false");
-//            arr.add("server.backlist.type","file");
-            arr.add("server.logs.file","server.log");
-            arr.add("server.logs.stdout","true");
-//            arr.add("server.http.enable","false");
-//            arr.add("server.http.type","headers");
-//            arr.add("command.allowSU","true");
-//            arr.add("command.allowAuth","true");
+            RecursionArray arr = getStdConfig();
             file.close();
             if(configetc) boost::property_tree::json_parser::write_json("/etc/cluserver.cfg",arr);
             else boost::property_tree::json_parser::write_json("config.json",arr);
@@ -133,6 +107,8 @@ int main(int argc, char *argv[])
         else
         {
             boost::property_tree::json_parser::read_json(file,configarray);
+            int cfgver=configarray.get<int>("version",CONFIG_VERSION);
+            if(cfgver!=CONFIG_VERSION) std::cout << "Warn\nWARNING! Config version does not match the version of the program. Config version:" << cfgver << ". Standart config version:" <<CONFIG_VERSION;
             config_mysql_host=configarray.get<std::string>("server.host","127.0.0.1");
             config_mysql_login=configarray.get<std::string>("server.login","root");
             config_mysql_dbname=configarray.get<std::string>("server.dbname","server");
@@ -141,15 +117,24 @@ int main(int argc, char *argv[])
             //RecArrUtils::printTree(configarray);
         }
     }
-    catch(boost::property_tree::json_parser_error ex)
+    catch(boost::property_tree::json_parser_error* ex)
     {
-        cout << "fail\n" << ex.what() << "\n";
+        cout << "fail\n" << ex->what() << "\n";
         file.close();
         return 1;
     }
     file.close();
-    if(configetc) logs.file.open(configarray.get<std::string>("server.logs.file","/var/log/server.log"),ios_base::app);
-    else logs.file.open(configarray.get<std::string>("server.logs.file","server.log"),ios_base::app);
+    if(configarray.get<std::string>("server.logs.fileout","true")=="true")
+    {
+        logs.isPrintFileout=true;
+        if(configetc) logs.file.open(configarray.get<std::string>("server.logs.file","/var/log/server.log"),ios_base::app);
+        else logs.file.open(configarray.get<std::string>("server.logs.file","server.log"),ios_base::app);
+    }
+    else
+    {
+        logs.isPrintFileout=false;
+    }
+
     if(configarray.get<std::string>("server.logs.stdout","true")=="true")
     {
         logs.isPrintStdout=true;
@@ -158,12 +143,6 @@ int main(int argc, char *argv[])
     {
         logs.isPrintStdout=false;
     }
-    //ptime timer = microsec_clock::local_time();
-//    config_mysql_host="localhost";
-//    config_mysql_login="chat";
-//    config_mysql_dbname="chat";
-//    config_mysql_password="FJS8CFhuumsERQbp!";
-//    config_mysql_port=3306;
     boostserver::thisConnect.endpoint= new boost::asio::ip::tcp::endpoint(
                 boost::asio::ip::address::from_string(
                     configarray.get<std::string>("server.host","127.0.0.1")),
@@ -189,65 +168,14 @@ int main(int argc, char *argv[])
         else
             logs << "Fail\n";
     }
-    service.thisstatus=SrvControl::status::loading;
-    logs << LOCALTIME << "Start threads ";
+    service.status=SrvControl::_status::loading;
+    logs << LOCALTIME << "Start " << configarray.get<int>("server.threads",2) << "threads ";
     boostserver::service.newThreads(configarray.get<int>("server.threads",2),false);
     logs << "OK\n";
     logs << LOCALTIME << "Start local thread ";
     std::thread localcmdthread(localcmd_thread);
     localcmdthread.detach();
     logs << "OK\n";
-    if(configarray.get<std::string>("mysql.active","false")=="true")
-    {
-        logs << LOCALTIME << "Start database connection ";
-        try
-        {
-            if(boostserver::service.startdb(false))
-                logs << "OK\n";
-            else
-                logs << "fail\n";
-        }
-        catch(mysqlpp::Exception ex)
-        {
-            logs << "fail\n";
-            logs << ex.what() << "\n";
-        }
-    }
-    //Database db;
-    //db.connect("localhost",3306,"chat","FJS8CFhuumsERQbp!","chat");
-    //MySqlResult ind = db.query("SELECT * FROM rooms;");
-    //ind.print();
-
-    //cout << ind.value("id") << endl;
-    /*std::string testerd="mymy",saha="AAAAA!";
-    ASLib::AVariant t2,t4,t7; //saha = "AAAAA!"
-    t2=testerd; //saha = непонятно что
-    ASLib::RecursionArray t3,t5,t6;
-    t3["test1"]=t2;
-    t5["testZ"]=saha;
-    t3["test2"]=&t5;
-    t4=t3["test1"];
-    t6=t3["test2"].toMap();
-    t7=t6["testZ"];
-    cout << t4.toString() << t7.toString();*/
-//    boost::property_tree::ptree test1,test2;
-//    test1.add("test","test1");
-//    test1.add("test","test2");
-//    test2.add("test2","test1");
-//    test1.add_child("test_child",test2);
-//    RecArrUtils::printTree(test1);
-//    RecArrUtils::printTree(RecArrUtils::fromArcan("test1[test1\\[\\]_\\\\s\\\\]test2[test2_s]test3[test1[1]test2[2]]3[\\[\\[\\\\]testX[]Zen[1]"));
-    //for(auto &v=test1.begin();v!=test1.end();++v)
-//    logs << LOCALTIME << "Test RecursionArray1\n";
-//    RecursionArray test1;
-//    for(int i=0;i<1000000;++i)
-//    {
-//        test1.push_back(RecursionArray::value_type(std::to_string(i), RecursionArray("AAAAAAAAAAAAAAAA")));
-//    }
-//    logs << LOCALTIME << "Test RecursionArray2\n";
-//    std::string test2=RecArrUtils::toArcan(test1);
-//    logs << LOCALTIME << "Test RecursionArray3\n";
-//    RecArrUtils::fromArcan(test2);
     logs << LOCALTIME << "Start server socket ";
     try
     {
@@ -257,10 +185,10 @@ int main(int argc, char *argv[])
         logs << "OK\n";
         logs << LOCALTIME << "Listen " << boostserver::thisConnect.endpoint->address().to_string() << " " << boostserver::thisConnect.endpoint->port() << "\n";
     }
-    catch(boost::system::system_error a)
+    catch(boost::system::system_error* a)
     {
         cout << "fail" << endl;
-        cout << a.what() << endl;
+        cout << a->what() << endl;
         return 1;
     }
 
@@ -288,9 +216,9 @@ int main(int argc, char *argv[])
                     service.connects.push_back(conn);
                     logs << LOCALTIME << "Listen " << conn->endpoint->address().to_string() << " " << conn->endpoint->port() << "\n";
                 }
-                catch(boost::system::system_error a)
+                catch(boost::system::system_error* a)
                 {
-                    cout << a.what() << endl;
+                    cout << a->what() << endl;
                     return 1;
                 }
             }
@@ -302,11 +230,14 @@ int main(int argc, char *argv[])
             }
         }
     }
-    service.thisstatus=SrvControl::status::started;
+
+
+    service.status=SrvControl::_status::started;
     logs << LOCALTIME << "Server started\n";
     service.savelog();
     boostserver::ioservice.run();
     logs << LOCALTIME << "Server stoped\n";
+    service.status=SrvControl::_status::stopping;
     service.savelog();
     return 0;
 }

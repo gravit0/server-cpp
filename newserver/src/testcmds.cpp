@@ -16,8 +16,17 @@ Protocol::CmdResult cmd_telnet(boostserver::Context context, std::string)
     return Protocol::message_result::OK;
 }
 
+Protocol::CmdResult cmd_stop(boostserver::Context context, std::string)
+{
+    service.closeclients();
+    service.status = boostserver::SrvControl::_status::prestopping;
+    return Protocol::message_result::OK;
+}
+
 Command testcmds[] = {
-    {&cmd_telnet,0x5c04d270af35bf79,0}
+    {&cmd_telnet,0x5c04d270af35bf79,0},
+    {&cmd_stop,0x4f6e0b2184918d89,0}
+    
 };
 bool initTestCmds()
 {
